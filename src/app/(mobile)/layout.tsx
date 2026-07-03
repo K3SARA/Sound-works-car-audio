@@ -1,6 +1,7 @@
 import { auth, signOut } from "@/lib/auth";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { Footer } from "@/components/layout/Footer";
+import { Logo } from "@/components/layout/Logo";
 import { BUSINESS } from "@/lib/business";
 
 export default async function MobileLayout({ children }: { children: React.ReactNode }) {
@@ -9,9 +10,12 @@ export default async function MobileLayout({ children }: { children: React.React
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
       <header className="flex items-center justify-between border-b border-black/10 bg-white px-4 py-3 dark:border-white/10 dark:bg-black">
-        <div>
-          <p className="text-sm font-bold leading-tight">{BUSINESS.name}</p>
-          <p className="text-[11px] text-black/50 dark:text-white/50">{session?.user?.name}</p>
+        <div className="flex items-center gap-2.5">
+          <Logo className="h-8 w-auto" />
+          <div>
+            <p className="text-sm font-bold leading-tight">{BUSINESS.name}</p>
+            <p className="text-[11px] text-black/50 dark:text-white/50">{session?.user?.name}</p>
+          </div>
         </div>
         <form
           action={async () => {

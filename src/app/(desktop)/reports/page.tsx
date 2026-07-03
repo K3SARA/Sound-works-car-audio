@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 async function getInvoices() {
@@ -26,7 +27,9 @@ export default async function ReportsPage() {
           <div key={inv.id} className="rounded-lg border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-bold">{inv.invoiceNumber}</p>
+                <Link href={`/reports/${inv.id}`} className="text-sm font-bold text-red-600 hover:underline">
+                  {inv.invoiceNumber}
+                </Link>
                 <p className="text-xs text-black/50 dark:text-white/50">
                   {inv.customerName} · {inv.customerPhone} · {inv.date.toLocaleDateString()}
                 </p>

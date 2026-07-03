@@ -24,3 +24,20 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Invoice printing: A5, no browser header/footer margins, chrome hidden via .no-print */
+@media print {
+  @page {
+    size: A5;
+    margin: 10mm;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff;
+  }
+}

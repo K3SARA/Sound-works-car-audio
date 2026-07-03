@@ -2,6 +2,7 @@ import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn } from "@/lib/auth";
 import { BUSINESS } from "@/lib/business";
+import { Logo } from "@/components/layout/Logo";
 
 export default async function LoginPage({
   searchParams,
@@ -29,7 +30,8 @@ export default async function LoginPage({
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4 dark:bg-neutral-950">
       <div className="w-full max-w-sm rounded-lg border border-black/10 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-black">
-        <h1 className="text-center text-lg font-bold">{BUSINESS.name}</h1>
+        <Logo className="mx-auto h-16 w-auto" />
+        <h1 className="mt-3 text-center text-lg font-bold">{BUSINESS.name}</h1>
         <p className="mt-1 text-center text-xs text-black/50 dark:text-white/50">Staff sign in</p>
 
         <form action={authenticate} className="mt-6 space-y-3">
