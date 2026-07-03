@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@/generated/prisma/client";
 
 export type AvailableUnit = {
   unitId: string;
@@ -15,21 +16,30 @@ export type AvailableUnit = {
   warrantyMonths: number;
 };
 
-/** Matches by exact serial number (scanner input) or partial product name/SKU/brand. */
-export async function searchAvailableUnits(query: string): Promise<AvailableUnit[]> {
+/**
+ * Matches by exact serial number (scanner input) or partial product name/SKU/brand,
+ * optionally narrowed to one category. A category with no search text browses that
+ * whole category; neither set returns nothing (avoids dumping the entire catalog).
+ */
+export async function searchAvailableUnits(query: string, category?: string): Promise<AvailableUnit[]> {
   const q = query.trim();
-  if (!q) return [];
+  if (!q && !category) return [];
 
-  const units = await prisma.inventoryUnit.findMany({
-    where: {
-      status: "IN_STOCK",
+  const AND: Prisma.InventoryUnitWhereInput[] = [{ status: "IN_STOCK" }];
+  if (category) AND.push({ product: { category } });
+  if (q) {
+    AND.push({
       OR: [
         { serialNumber: { equals: q, mode: "insensitive" } },
         { product: { name: { contains: q, mode: "insensitive" } } },
         { product: { sku: { contains: q, mode: "insensitive" } } },
         { product: { brand: { contains: q, mode: "insensitive" } } },
       ],
-    },
+    });
+  }
+
+  const units = await prisma.inventoryUnit.findMany({
+    where: { AND },
     include: { product: true },
     take: 20,
   });

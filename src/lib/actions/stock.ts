@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 
 export type StockResult = {
   serialNumber: string;
@@ -11,20 +12,29 @@ export type StockResult = {
   location: string | null;
 };
 
-/** Read-only stock lookup for floor staff — no edit capability, mirrors mobile POS search. */
-export async function searchStock(query: string): Promise<StockResult[]> {
+/**
+ * Read-only stock lookup for floor staff — no edit capability, mirrors mobile POS search.
+ * A category with no search text browses that whole category; neither set returns nothing.
+ */
+export async function searchStock(query: string, category?: string): Promise<StockResult[]> {
   const q = query.trim();
-  if (!q) return [];
+  if (!q && !category) return [];
 
-  const units = await prisma.inventoryUnit.findMany({
-    where: {
+  const AND: Prisma.InventoryUnitWhereInput[] = [];
+  if (category) AND.push({ product: { category } });
+  if (q) {
+    AND.push({
       OR: [
         { serialNumber: { equals: q, mode: "insensitive" } },
         { product: { name: { contains: q, mode: "insensitive" } } },
         { product: { sku: { contains: q, mode: "insensitive" } } },
         { product: { brand: { contains: q, mode: "insensitive" } } },
       ],
-    },
+    });
+  }
+
+  const units = await prisma.inventoryUnit.findMany({
+    where: { AND },
     include: { product: true },
     take: 20,
     orderBy: { receivedAt: "desc" },

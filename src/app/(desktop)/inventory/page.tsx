@@ -1,22 +1,54 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { deleteProduct } from "@/lib/actions/inventory";
+import { getCategories } from "@/lib/actions/catalog";
 import { AddProductForm } from "@/components/inventory/AddProductForm";
+import { clsx } from "clsx";
 
-async function getProducts() {
+async function getProducts(category?: string) {
   return prisma.product.findMany({
+    where: category ? { category } : undefined,
     include: { _count: { select: { units: { where: { status: "IN_STOCK" } } } } },
     orderBy: { name: "asc" },
   });
 }
 
-export default async function InventoryPage() {
-  const products = await getProducts();
+export default async function InventoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const { category } = await searchParams;
+  const [products, categories] = await Promise.all([getProducts(category), getCategories()]);
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="mb-4 text-xl font-bold">Inventory</h1>
+
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          <Link
+            href="/inventory"
+            className={clsx(
+              "rounded-full px-3 py-1 text-xs font-medium",
+              !category ? "bg-red-600 text-white" : "bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/60"
+            )}
+          >
+            All
+          </Link>
+          {categories.map((c) => (
+            <Link
+              key={c}
+              href={`/inventory?category=${encodeURIComponent(c)}`}
+              className={clsx(
+                "rounded-full px-3 py-1 text-xs font-medium",
+                category === c ? "bg-red-600 text-white" : "bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/60"
+              )}
+            >
+              {c}
+            </Link>
+          ))}
+        </div>
 
         <table className="w-full overflow-hidden rounded-lg border border-black/10 bg-white text-sm dark:border-white/10 dark:bg-black">
           <thead className="bg-black/5 text-left text-xs uppercase text-black/50 dark:bg-white/5 dark:text-white/50">
@@ -53,7 +85,7 @@ export default async function InventoryPage() {
             {products.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-4 py-6 text-center text-black/40">
-                  No products yet.
+                  {category ? `No products in "${category}".` : "No products yet."}
                 </td>
               </tr>
             )}

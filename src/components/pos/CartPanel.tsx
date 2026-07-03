@@ -3,11 +3,13 @@
 import { useState, useTransition } from "react";
 import { Search, Trash2, Loader2 } from "lucide-react";
 import { searchAvailableUnits, checkoutInvoice, type AvailableUnit } from "@/lib/actions/pos";
+import { CategoryFilter } from "@/components/pos/CategoryFilter";
 
 type CartLine = AvailableUnit & { salePrice: string };
 
 export function CartPanel() {
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<string | null>(null);
   const [results, setResults] = useState<AvailableUnit[]>([]);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [customerName, setCustomerName] = useState("");
@@ -17,13 +19,22 @@ export function CartPanel() {
   const [isSearching, startSearch] = useTransition();
   const [isCheckingOut, startCheckout] = useTransition();
 
-  function runSearch(q: string) {
-    setQuery(q);
+  function runSearch(q: string, cat: string | null) {
     setError(null);
     startSearch(async () => {
-      const found = await searchAvailableUnits(q);
+      const found = await searchAvailableUnits(q, cat ?? undefined);
       setResults(found.filter((r) => !cart.some((c) => c.unitId === r.unitId)));
     });
+  }
+
+  function handleQueryChange(q: string) {
+    setQuery(q);
+    runSearch(q, category);
+  }
+
+  function handleCategoryChange(cat: string | null) {
+    setCategory(cat);
+    runSearch(query, cat);
   }
 
   function addToCart(unit: AvailableUnit) {
@@ -94,7 +105,7 @@ export function CartPanel() {
         <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-black/40" size={18} />
         <input
           value={query}
-          onChange={(e) => runSearch(e.target.value)}
+          onChange={(e) => handleQueryChange(e.target.value)}
           placeholder="Scan serial number or search product..."
           autoFocus
           className="w-full rounded-md border border-black/15 bg-white py-2.5 pl-10 pr-3 text-sm dark:border-white/15 dark:bg-black"
@@ -103,6 +114,8 @@ export function CartPanel() {
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-black/40" size={16} />
         )}
       </div>
+
+      <CategoryFilter selected={category} onChange={handleCategoryChange} />
 
       {results.length > 0 && (
         <ul className="divide-y divide-black/10 rounded-md border border-black/10 dark:divide-white/10 dark:border-white/10">
