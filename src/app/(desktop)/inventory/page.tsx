@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { createProduct, deleteProduct } from "@/lib/actions/inventory";
+import { deleteProduct } from "@/lib/actions/inventory";
+import { AddProductForm } from "@/components/inventory/AddProductForm";
 
 async function getProducts() {
   return prisma.product.findMany({
@@ -62,14 +63,7 @@ export default async function InventoryPage() {
 
       <div className="max-w-md rounded-lg border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black">
         <h2 className="mb-3 text-sm font-bold">Add product</h2>
-        <form action={createProduct} className="space-y-2">
-          <input name="name" placeholder="Name (e.g. TS-A1670F)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
-          <input name="brand" placeholder="Brand (e.g. Pioneer)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
-          <input name="category" placeholder="Category (e.g. Speakers)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
-          <input name="sku" placeholder="SKU" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
-          <input name="warrantyMonths" type="number" min="0" placeholder="Warranty (months)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
-          <button className="w-full rounded-md bg-red-600 py-2 text-sm font-semibold text-white">Add product</button>
-        </form>
+        <AddProductForm />
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { addInventoryUnits, deleteInventoryUnit } from "@/lib/actions/inventory";
+import { deleteInventoryUnit } from "@/lib/actions/inventory";
 import { StatusSelect } from "@/components/inventory/StatusSelect";
+import { AddSerialsForm } from "@/components/inventory/AddSerialsForm";
 
 export default async function ProductDetailPage({
   params,
@@ -28,21 +29,7 @@ export default async function ProductDetailPage({
 
       <div className="max-w-lg rounded-lg border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black">
         <h2 className="mb-3 text-sm font-bold">Receive units</h2>
-        <form action={addInventoryUnits} className="space-y-2">
-          <input type="hidden" name="productId" value={product.id} />
-          <textarea
-            name="serialNumbers"
-            required
-            rows={4}
-            placeholder={"One serial number per line"}
-            className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
-          />
-          <div className="flex gap-2">
-            <input name="location" placeholder="Shelf / bin location" className="w-1/2 rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
-            <input name="costPrice" type="number" step="0.01" min="0" placeholder="Cost price" className="w-1/2 rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
-          </div>
-          <button className="w-full rounded-md bg-red-600 py-2 text-sm font-semibold text-white">Add serial numbers</button>
-        </form>
+        <AddSerialsForm productId={product.id} />
       </div>
 
       <table className="w-full overflow-hidden rounded-lg border border-black/10 bg-white text-sm dark:border-white/10 dark:bg-black">

@@ -3,6 +3,9 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
+
+export type ActionResult = { error?: string; success?: string };
 
 const productSchema = z.object({
   name: z.string().min(1),
@@ -12,10 +15,20 @@ const productSchema = z.object({
   warrantyMonths: z.coerce.number().int().min(0),
 });
 
-export async function createProduct(formData: FormData) {
+export async function createProduct(_prevState: ActionResult, formData: FormData): Promise<ActionResult> {
   const data = productSchema.parse(Object.fromEntries(formData));
-  await prisma.product.create({ data });
+
+  try {
+    await prisma.product.create({ data });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return { error: `SKU "${data.sku}" is already in use by another product.` };
+    }
+    throw err;
+  }
+
   revalidatePath("/inventory");
+  return { success: "Product added." };
 }
 
 export async function deleteProduct(productId: string) {
@@ -31,16 +44,14 @@ const unitsSchema = z.object({
 });
 
 /** Accepts one serial number per line so a whole shipment can be received at once — every unit is its own row, never a quantity count. */
-export async function addInventoryUnits(formData: FormData) {
+export async function addInventoryUnits(_prevState: ActionResult, formData: FormData): Promise<ActionResult> {
   const raw = Object.fromEntries(formData);
   const data = unitsSchema.parse(raw);
 
-  const serials = data.serialNumbers
-    .split(/\r?\n/)
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const serials = [...new Set(data.serialNumbers.split(/\r?\n/).map((s) => s.trim()).filter(Boolean))];
 
-  await prisma.inventoryUnit.createMany({
+  const { count } = await prisma.inventoryUnit.createMany({
+    skipDuplicates: true,
     data: serials.map((serialNumber) => ({
       productId: data.productId,
       serialNumber,
@@ -51,6 +62,14 @@ export async function addInventoryUnits(formData: FormData) {
 
   revalidatePath("/inventory");
   revalidatePath(`/inventory/${data.productId}`);
+
+  const skipped = serials.length - count;
+  if (skipped > 0) {
+    return {
+      error: `Added ${count} of ${serials.length} — ${skipped} serial number${skipped === 1 ? "" : "s"} already exist in the system and ${skipped === 1 ? "was" : "were"} skipped.`,
+    };
+  }
+  return { success: `Added ${count} serial number${count === 1 ? "" : "s"}.` };
 }
 
 export async function deleteInventoryUnit(unitId: string, productId: string) {
