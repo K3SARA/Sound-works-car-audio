@@ -20,12 +20,11 @@ export type AvailableUnit = {
 
 /**
  * Matches by exact serial number (scanner input) or partial product name/model number/brand,
- * optionally narrowed to one category. A category with no search text browses that
- * whole category; neither set returns nothing (avoids dumping the entire catalog).
+ * optionally narrowed to one category. With no search text and no category ("All"), browses
+ * the first 20 in-stock units — capped by `take`, not an unbounded dump of the whole catalog.
  */
 export async function searchAvailableUnits(query: string, category?: string): Promise<AvailableUnit[]> {
   const q = query.trim();
-  if (!q && !category) return [];
 
   const AND: Prisma.InventoryUnitWhereInput[] = [{ status: "IN_STOCK" }];
   if (category) AND.push({ product: { category } });
@@ -43,6 +42,7 @@ export async function searchAvailableUnits(query: string, category?: string): Pr
   const units = await prisma.inventoryUnit.findMany({
     where: { AND },
     include: { product: true },
+    orderBy: { product: { name: "asc" } },
     take: 20,
   });
 

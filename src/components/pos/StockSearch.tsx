@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { clsx } from "clsx";
 import { searchStock, type StockResult } from "@/lib/actions/stock";
@@ -24,7 +24,7 @@ export function StockSearch() {
     startSearch(async () => {
       const found = await searchStock(q, cat ?? undefined);
       setResults(found);
-      setSearched(q.trim().length > 0 || cat !== null);
+      setSearched(true);
     });
   }
 
@@ -37,6 +37,11 @@ export function StockSearch() {
     setCategory(cat);
     runSearch(query, cat);
   }
+
+  // Browse the default (unfiltered) list on first load, same as picking "All".
+  useEffect(() => {
+    runSearch("", null);
+  }, []);
 
   return (
     <div className="space-y-4">

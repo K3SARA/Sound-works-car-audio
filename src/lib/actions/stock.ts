@@ -15,11 +15,10 @@ export type StockResult = {
 
 /**
  * Read-only stock lookup for floor staff — no edit capability, mirrors mobile POS search.
- * A category with no search text browses that whole category; neither set returns nothing.
+ * With no search text and no category ("All"), browses the 20 most recently received units.
  */
 export async function searchStock(query: string, category?: string): Promise<StockResult[]> {
   const q = query.trim();
-  if (!q && !category) return [];
 
   const AND: Prisma.InventoryUnitWhereInput[] = [];
   if (category) AND.push({ product: { category } });

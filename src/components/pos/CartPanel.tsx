@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { Search, Trash2, Loader2, CheckCircle2, Printer } from "lucide-react";
 import { searchAvailableUnits, checkoutInvoice, type AvailableUnit } from "@/lib/actions/pos";
@@ -29,6 +29,14 @@ export function CartPanel() {
       setResults(found.filter((r) => !cart.some((c) => c.unitId === r.unitId)));
     });
   }
+
+  // Browse the default (unfiltered) list on first load, same as picking "All".
+  useEffect(() => {
+    startSearch(async () => {
+      const found = await searchAvailableUnits("", undefined);
+      setResults(found);
+    });
+  }, []);
 
   function handleQueryChange(q: string) {
     setQuery(q);
