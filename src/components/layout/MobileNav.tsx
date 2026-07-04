@@ -14,7 +14,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="grid grid-cols-2 border-t border-black/10 bg-white dark:border-white/10 dark:bg-black">
+    <nav className="no-print grid grid-cols-2 border-t border-black/10 bg-white dark:border-white/10 dark:bg-black">
       {TABS.map(({ href, label, icon: Icon }) => {
         const active = pathname.startsWith(href);
         return (

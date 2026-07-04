@@ -9,7 +9,7 @@ export default async function MobileLayout({ children }: { children: React.React
 
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
-      <header className="flex items-center justify-between border-b border-black/10 bg-white px-4 py-3 dark:border-white/10 dark:bg-black">
+      <header className="no-print flex items-center justify-between border-b border-black/10 bg-white px-4 py-3 dark:border-white/10 dark:bg-black">
         <div className="flex items-center gap-2.5">
           <Logo className="h-8 w-auto" />
           <div>
@@ -27,7 +27,7 @@ export default async function MobileLayout({ children }: { children: React.React
         </form>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4">{children}</main>
+      <main className="flex-1 overflow-y-auto p-4 print:overflow-visible print:bg-white print:p-0">{children}</main>
 
       <MobileNav />
       <Footer />
