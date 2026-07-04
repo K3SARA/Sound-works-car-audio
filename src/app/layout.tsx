@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sound Works Car Audio Solutions",
-  description: "Inventory, billing, and warranty management for Sound Works Car Audio Solutions.",
+  title: "Sound Works Car Audio",
+  description: "Inventory, billing, and warranty management for Sound Works Car Audio.",
 };
 
 export default function RootLayout({

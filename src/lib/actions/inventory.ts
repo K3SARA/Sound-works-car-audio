@@ -22,7 +22,7 @@ export async function createProduct(_prevState: ActionResult, formData: FormData
     await prisma.product.create({ data });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-      return { error: `SKU "${data.sku}" is already in use by another product.` };
+      return { error: `Model Number "${data.sku}" is already in use by another product.` };
     }
     throw err;
   }

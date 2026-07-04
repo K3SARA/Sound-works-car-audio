@@ -56,7 +56,7 @@ export default async function InventoryPage({
               <th className="px-4 py-2">Product</th>
               <th className="px-4 py-2">Brand</th>
               <th className="px-4 py-2">Category</th>
-              <th className="px-4 py-2">SKU</th>
+              <th className="px-4 py-2">Model Number</th>
               <th className="px-4 py-2">Warranty</th>
               <th className="px-4 py-2">In stock</th>
               <th className="px-4 py-2" />

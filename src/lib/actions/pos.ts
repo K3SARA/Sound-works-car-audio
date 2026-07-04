@@ -17,7 +17,7 @@ export type AvailableUnit = {
 };
 
 /**
- * Matches by exact serial number (scanner input) or partial product name/SKU/brand,
+ * Matches by exact serial number (scanner input) or partial product name/model number/brand,
  * optionally narrowed to one category. A category with no search text browses that
  * whole category; neither set returns nothing (avoids dumping the entire catalog).
  */

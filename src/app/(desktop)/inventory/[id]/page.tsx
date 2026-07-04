@@ -23,7 +23,7 @@ export default async function ProductDetailPage({
       <div>
         <h1 className="text-xl font-bold">{product.brand} {product.name}</h1>
         <p className="text-sm text-black/50 dark:text-white/50">
-          SKU {product.sku} · {product.category} · {product.warrantyMonths} month warranty
+          Model Number {product.sku} · {product.category} · {product.warrantyMonths} month warranty
         </p>
       </div>
 

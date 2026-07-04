@@ -1,6 +1,6 @@
-# Sound Works Car Audio Solutions
+# Sound Works Car Audio
 
-Inventory, billing (POS), and serial-number warranty management for Sound Works Car Audio Solutions.
+Inventory, billing (POS), and serial-number warranty management for Sound Works Car Audio.
 
 127/D, Kotalawala, Kaduwela · +94 76 995 5588
 

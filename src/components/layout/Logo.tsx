@@ -6,5 +6,5 @@ import { LOGO_DATA_URI } from "@/lib/logo-data";
 // which has no dependency on static-file serving at all.
 export function Logo({ className = "h-10 w-auto" }: { className?: string }) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={LOGO_DATA_URI} alt="Sound Works Car Audio Solutions" className={className} />;
+  return <img src={LOGO_DATA_URI} alt="Sound Works Car Audio" className={className} />;
 }

@@ -13,7 +13,7 @@ export function AddProductForm() {
       <input name="name" placeholder="Name (e.g. TS-A1670F)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
       <input name="brand" placeholder="Brand (e.g. Pioneer)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
       <input name="category" placeholder="Category (e.g. Speakers)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
-      <input name="sku" placeholder="SKU" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
+      <input name="sku" placeholder="Model Number" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
       <input name="warrantyMonths" type="number" min="0" placeholder="Warranty (months)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
 
       {state.error && <p className="text-xs text-red-600">{state.error}</p>}
