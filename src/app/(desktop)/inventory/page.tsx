@@ -8,7 +8,10 @@ import { clsx } from "clsx";
 async function getProducts(category?: string) {
   return prisma.product.findMany({
     where: category ? { category } : undefined,
-    include: { _count: { select: { units: { where: { status: "IN_STOCK" } } } } },
+    include: {
+      _count: { select: { units: { where: { status: "IN_STOCK" } } } },
+      supplier: { select: { name: true } },
+    },
     orderBy: { name: "asc" },
   });
 }
@@ -57,6 +60,7 @@ export default async function InventoryPage({
               <th className="px-4 py-2">Brand</th>
               <th className="px-4 py-2">Category</th>
               <th className="px-4 py-2">Model Number</th>
+              <th className="px-4 py-2">Supplier</th>
               <th className="px-4 py-2">Warranty</th>
               <th className="px-4 py-2">In stock</th>
               <th className="px-4 py-2" />
@@ -73,6 +77,7 @@ export default async function InventoryPage({
                 <td className="px-4 py-2">{p.brand}</td>
                 <td className="px-4 py-2">{p.category}</td>
                 <td className="px-4 py-2">{p.sku}</td>
+                <td className="px-4 py-2">{p.supplier?.name ?? "—"}</td>
                 <td className="px-4 py-2">{p.warrantyMonths} mo</td>
                 <td className="px-4 py-2">{p._count.units}</td>
                 <td className="px-4 py-2 text-right">
@@ -84,7 +89,7 @@ export default async function InventoryPage({
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-black/40">
+                <td colSpan={8} className="px-4 py-6 text-center text-black/40">
                   {category ? `No products in "${category}".` : "No products yet."}
                 </td>
               </tr>

@@ -7,19 +7,54 @@ import { Prisma } from "@/generated/prisma/client";
 
 export type ActionResult = { error?: string; success?: string };
 
-const productSchema = z.object({
-  name: z.string().min(1),
-  brand: z.string().min(1),
-  category: z.string().min(1),
-  sku: z.string().min(1),
-  warrantyMonths: z.coerce.number().int().min(0),
-});
+const productSchema = z
+  .object({
+    name: z.string().min(1),
+    brand: z.string().min(1),
+    category: z.string().min(1),
+    sku: z.string().min(1),
+    warrantyMonths: z.coerce.number().int().min(0),
+    supplierId: z.string().optional(),
+    newSupplierName: z.string().optional(),
+    newSupplierAddress: z.string().optional(),
+    newSupplierPhone: z.string().optional(),
+  })
+  .refine((data) => data.supplierId || (data.newSupplierName && data.newSupplierAddress && data.newSupplierPhone), {
+    message: "Select a supplier or fill in the new supplier's name, address, and mobile number.",
+  });
 
 export async function createProduct(_prevState: ActionResult, formData: FormData): Promise<ActionResult> {
-  const data = productSchema.parse(Object.fromEntries(formData));
+  const parsed = productSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+  const data = parsed.data;
 
   try {
-    await prisma.product.create({ data });
+    await prisma.$transaction(async (tx) => {
+      const supplierId = data.supplierId
+        ? data.supplierId
+        : (
+            await tx.supplier.create({
+              data: {
+                name: data.newSupplierName!,
+                address: data.newSupplierAddress!,
+                phone: data.newSupplierPhone!,
+              },
+            })
+          ).id;
+
+      await tx.product.create({
+        data: {
+          name: data.name,
+          brand: data.brand,
+          category: data.category,
+          sku: data.sku,
+          warrantyMonths: data.warrantyMonths,
+          supplierId,
+        },
+      });
+    });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
       return { error: `Model Number "${data.sku}" is already in use by another product.` };

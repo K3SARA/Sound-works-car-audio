@@ -32,6 +32,18 @@ model User {
 // Catalog
 // ---------------------------------------------------------------------------
 
+// Reusable across products — captured once, then picked from a list for
+// future products instead of retyping the same supplier's details.
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  phone     String
+  createdAt DateTime @default(now())
+
+  products Product[]
+}
+
 model Product {
   id                String   @id @default(cuid())
   name              String
@@ -42,10 +54,14 @@ model Product {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+
   units InventoryUnit[]
 
   @@index([brand])
   @@index([category])
+  @@index([supplierId])
 }
 
 enum UnitStatus {

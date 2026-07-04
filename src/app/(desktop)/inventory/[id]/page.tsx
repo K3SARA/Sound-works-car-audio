@@ -13,7 +13,7 @@ export default async function ProductDetailPage({
 
   const product = await prisma.product.findUnique({
     where: { id },
-    include: { units: { orderBy: { receivedAt: "desc" } } },
+    include: { units: { orderBy: { receivedAt: "desc" } }, supplier: true },
   });
 
   if (!product) notFound();
@@ -25,6 +25,11 @@ export default async function ProductDetailPage({
         <p className="text-sm text-black/50 dark:text-white/50">
           Model Number {product.sku} · {product.category} · {product.warrantyMonths} month warranty
         </p>
+        {product.supplier && (
+          <p className="mt-1 text-xs text-black/50 dark:text-white/50">
+            Supplier: {product.supplier.name} · {product.supplier.address} · {product.supplier.phone}
+          </p>
+        )}
       </div>
 
       <div className="max-w-lg rounded-lg border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black">
