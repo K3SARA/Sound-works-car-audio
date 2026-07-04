@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { deleteInventoryUnit } from "@/lib/actions/inventory";
 import { StatusSelect } from "@/components/inventory/StatusSelect";
@@ -20,16 +21,24 @@ export default async function ProductDetailPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold">{product.brand} {product.name}</h1>
-        <p className="text-sm text-black/50 dark:text-white/50">
-          Model Number {product.sku} · {product.category} · {product.warrantyMonths} month warranty
-        </p>
-        {product.supplier && (
-          <p className="mt-1 text-xs text-black/50 dark:text-white/50">
-            Supplier: {product.supplier.name} · {product.supplier.address} · {product.supplier.phone}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-bold">{product.brand} {product.name}</h1>
+          <p className="text-sm text-black/50 dark:text-white/50">
+            Model Number {product.sku} · {product.category} · {product.warrantyMonths} month warranty
           </p>
-        )}
+          {product.supplier && (
+            <p className="mt-1 text-xs text-black/50 dark:text-white/50">
+              Supplier: {product.supplier.name} · {product.supplier.address} · {product.supplier.phone}
+            </p>
+          )}
+        </div>
+        <Link
+          href={`/inventory/${product.id}/edit`}
+          className="shrink-0 rounded-md border border-black/15 px-3 py-1.5 text-xs font-medium text-black/70 hover:bg-black/5 dark:border-white/15 dark:text-white/70 dark:hover:bg-white/10"
+        >
+          Edit product
+        </Link>
       </div>
 
       <div className="max-w-lg rounded-lg border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black">

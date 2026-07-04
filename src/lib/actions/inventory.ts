@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 
@@ -64,6 +65,55 @@ export async function createProduct(_prevState: ActionResult, formData: FormData
 
   revalidatePath("/inventory");
   return { success: "Product added." };
+}
+
+export async function updateProduct(
+  productId: string,
+  _prevState: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  const parsed = productSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+  const data = parsed.data;
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const supplierId = data.supplierId
+        ? data.supplierId
+        : (
+            await tx.supplier.create({
+              data: {
+                name: data.newSupplierName!,
+                address: data.newSupplierAddress!,
+                phone: data.newSupplierPhone!,
+              },
+            })
+          ).id;
+
+      await tx.product.update({
+        where: { id: productId },
+        data: {
+          name: data.name,
+          brand: data.brand,
+          category: data.category,
+          sku: data.sku,
+          warrantyMonths: data.warrantyMonths,
+          supplierId,
+        },
+      });
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return { error: `Model Number "${data.sku}" is already in use by another product.` };
+    }
+    throw err;
+  }
+
+  revalidatePath("/inventory");
+  revalidatePath(`/inventory/${productId}`);
+  redirect(`/inventory/${productId}`);
 }
 
 export async function deleteProduct(productId: string) {

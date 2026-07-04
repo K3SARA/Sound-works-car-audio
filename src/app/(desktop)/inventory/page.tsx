@@ -81,9 +81,14 @@ export default async function InventoryPage({
                 <td className="px-4 py-2">{p.warrantyMonths} mo</td>
                 <td className="px-4 py-2">{p._count.units}</td>
                 <td className="px-4 py-2 text-right">
-                  <form action={deleteProduct.bind(null, p.id)}>
-                    <button className="text-xs text-black/40 hover:text-red-600">Delete</button>
-                  </form>
+                  <div className="flex items-center justify-end gap-3">
+                    <Link href={`/inventory/${p.id}/edit`} className="text-xs text-black/50 hover:text-red-600 dark:text-white/50">
+                      Edit
+                    </Link>
+                    <form action={deleteProduct.bind(null, p.id)}>
+                      <button className="text-xs text-black/40 hover:text-red-600">Delete</button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             ))}

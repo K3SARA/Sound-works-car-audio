@@ -3,10 +3,16 @@
 import { useEffect, useState } from "react";
 import { getSuppliers, type SupplierOption } from "@/lib/actions/supplier";
 
-export function SupplierCombobox() {
+export function SupplierCombobox({
+  initialSupplierId = null,
+  initialSupplierName = "",
+}: {
+  initialSupplierId?: string | null;
+  initialSupplierName?: string;
+}) {
   const [suppliers, setSuppliers] = useState<SupplierOption[]>([]);
-  const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [query, setQuery] = useState(initialSupplierName);
+  const [selectedId, setSelectedId] = useState<string | null>(initialSupplierId);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
