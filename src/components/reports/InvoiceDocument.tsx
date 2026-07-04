@@ -22,7 +22,7 @@ export type InvoiceDocumentData = {
 export function InvoiceDocument({ invoice }: { invoice: InvoiceDocumentData }) {
   return (
     <div className="bg-white p-6 text-black print:p-0">
-      <div className="flex items-start justify-between gap-4 border-b-2 border-black/80 pb-4">
+      <div className="flex items-start justify-between gap-4 border-b-2 border-red-600 pb-4">
         <div className="flex items-start gap-3">
           <Logo className="h-14 w-auto" />
           <div className="text-[11px] leading-snug text-black/70">
@@ -32,9 +32,9 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceDocumentData }) {
           </div>
         </div>
         <div className="text-right">
-          <p className="text-lg font-bold tracking-wide">INVOICE</p>
-          <p className="text-xs text-black/70">{invoice.invoiceNumber}</p>
-          <p className="text-xs text-black/70">{invoice.date.toLocaleDateString()}</p>
+          <p className="text-lg font-bold tracking-wide text-red-600">INVOICE</p>
+          <p className="font-mono text-xs font-semibold text-black">{invoice.invoiceNumber}</p>
+          <p className="text-xs text-black/60">{invoice.date.toLocaleDateString()}</p>
         </div>
       </div>
 
@@ -75,8 +75,8 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceDocumentData }) {
         </tbody>
       </table>
 
-      <div className="mt-3 flex justify-end border-t border-black/30 pt-2">
-        <div className="flex w-40 justify-between text-sm font-bold">
+      <div className="mt-3 flex justify-end border-t-2 border-red-600 pt-2">
+        <div className="flex w-44 justify-between text-sm font-bold">
           <span>Total</span>
           <span>Rs. {invoice.totalAmount.toFixed(2)}</span>
         </div>

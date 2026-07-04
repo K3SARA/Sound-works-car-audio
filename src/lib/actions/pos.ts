@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@/generated/prisma/client";
+import { formatInvoiceNumber } from "@/lib/invoice-number";
 
 export type AvailableUnit = {
   unitId: string;
@@ -108,5 +109,5 @@ export async function checkoutInvoice(input: CheckoutInput) {
 
   revalidatePath("/pos");
   revalidatePath("/stock");
-  return { invoiceId: invoice.id, invoiceNumber: invoice.invoiceNumber };
+  return { invoiceId: invoice.id, invoiceNumber: formatInvoiceNumber(invoice.sequence) };
 }

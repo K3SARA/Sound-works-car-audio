@@ -96,7 +96,7 @@ model InventoryUnit {
 
 model Invoice {
   id            String   @id @default(cuid())
-  invoiceNumber String   @unique @default(cuid())
+  sequence      Int      @unique @default(autoincrement()) // human-facing invoice number is derived from this, e.g. INV-000001
   customerName  String
   customerPhone String
   date          DateTime @default(now())

@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { InvoiceDocument } from "@/components/reports/InvoiceDocument";
 import { PrintButton } from "@/components/reports/PrintButton";
+import { formatInvoiceNumber } from "@/lib/invoice-number";
 
 export default async function InvoiceDetailPage({
   params,
@@ -35,7 +36,7 @@ export default async function InvoiceDetailPage({
       <div className="mx-auto max-w-[148mm] border border-black/10 shadow-sm print:max-w-none print:border-0 print:shadow-none">
         <InvoiceDocument
           invoice={{
-            invoiceNumber: invoice.invoiceNumber,
+            invoiceNumber: formatInvoiceNumber(invoice.sequence),
             date: invoice.date,
             customerName: invoice.customerName,
             customerPhone: invoice.customerPhone,

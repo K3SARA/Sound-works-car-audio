@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { formatInvoiceNumber } from "@/lib/invoice-number";
 
 export type WarrantyLookupResult = {
   unitId: string;
@@ -50,7 +51,7 @@ export async function lookupWarranty(serialNumber: string): Promise<WarrantyLook
     warrantyExpiresAt.setMonth(warrantyExpiresAt.getMonth() + unit.invoiceItem.warrantyMonths);
 
     sale = {
-      invoiceNumber: unit.invoiceItem.invoice.invoiceNumber,
+      invoiceNumber: formatInvoiceNumber(unit.invoiceItem.invoice.sequence),
       customerName: unit.invoiceItem.invoice.customerName,
       customerPhone: unit.invoiceItem.invoice.customerPhone,
       purchaseDate: purchaseDate.toISOString(),

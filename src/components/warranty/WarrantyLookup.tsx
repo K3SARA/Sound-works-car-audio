@@ -70,37 +70,60 @@ export function WarrantyLookup() {
 
       {result && (
         <div className="space-y-4">
-          <div className="rounded-lg border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black">
-            <p className="text-sm font-bold">{result.brand} {result.productName}</p>
-            <p className="text-xs text-black/50 dark:text-white/50">SN: {result.serialNumber} · Unit status: {result.status.replace("_", " ")}</p>
+          <div className="overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10 dark:bg-black">
+            <div className="flex items-center justify-between p-4">
+              <div>
+                <p className="text-sm font-bold">{result.brand} {result.productName}</p>
+                <p className="font-mono text-xs text-black/50 dark:text-white/50">SN: {result.serialNumber}</p>
+              </div>
+              <span className="shrink-0 rounded-full bg-black/5 px-2.5 py-1 text-[11px] font-semibold text-black/60 dark:bg-white/10 dark:text-white/60">
+                {result.status.replace("_", " ")}
+              </span>
+            </div>
 
             {result.sale ? (
-              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-                <span className="text-black/50 dark:text-white/50">Invoice</span>
-                <span>{result.sale.invoiceNumber}</span>
-                <span className="text-black/50 dark:text-white/50">Customer</span>
-                <span>{result.sale.customerName} · {result.sale.customerPhone}</span>
-                <span className="text-black/50 dark:text-white/50">Purchase date</span>
-                <span>{new Date(result.sale.purchaseDate).toLocaleDateString()}</span>
-                <span className="text-black/50 dark:text-white/50">Sale price</span>
-                <span>Rs. {result.sale.salePrice.toFixed(2)}</span>
-                <span className="text-black/50 dark:text-white/50">Warranty status</span>
-                <span>
+              <div className="border-t border-black/10 bg-black/[0.02] p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-black/40 dark:text-white/40">Invoice</p>
+                    <p className="font-mono text-base font-bold">{result.sale.invoiceNumber}</p>
+                  </div>
                   <span
                     className={clsx(
-                      "rounded-full px-2 py-0.5 text-xs font-semibold",
+                      "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold",
                       result.sale.isActive
                         ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
                         : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400"
                     )}
                   >
-                    {result.sale.isActive ? "Active" : "Expired"}
-                  </span>{" "}
-                  until {new Date(result.sale.warrantyExpiresAt).toLocaleDateString()}
-                </span>
+                    Warranty {result.sale.isActive ? "Active" : "Expired"}
+                  </span>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-black/40 dark:text-white/40">Customer</p>
+                    <p className="font-medium">{result.sale.customerName}</p>
+                    <p className="text-xs text-black/50 dark:text-white/50">{result.sale.customerPhone}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-black/40 dark:text-white/40">Sale price</p>
+                    <p className="font-medium">Rs. {result.sale.salePrice.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-black/40 dark:text-white/40">Purchase date</p>
+                    <p>{new Date(result.sale.purchaseDate).toLocaleDateString()}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-black/40 dark:text-white/40">Warranty until</p>
+                    <p>{new Date(result.sale.warrantyExpiresAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
               </div>
             ) : (
-              <p className="mt-3 text-sm text-amber-600">This unit has not been sold yet — no warranty on file.</p>
+              <p className="border-t border-black/10 p-4 text-sm text-amber-600 dark:border-white/10">
+                This unit has not been sold yet — no warranty on file.
+              </p>
             )}
           </div>
 

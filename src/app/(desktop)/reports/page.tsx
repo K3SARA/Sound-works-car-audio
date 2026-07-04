@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { formatInvoiceNumber } from "@/lib/invoice-number";
 
 async function getInvoices() {
   return prisma.invoice.findMany({
@@ -28,7 +29,7 @@ export default async function ReportsPage() {
             <div className="flex items-start justify-between">
               <div>
                 <Link href={`/reports/${inv.id}`} className="text-sm font-bold text-red-600 hover:underline">
-                  {inv.invoiceNumber}
+                  {formatInvoiceNumber(inv.sequence)}
                 </Link>
                 <p className="text-xs text-black/50 dark:text-white/50">
                   {inv.customerName} · {inv.customerPhone} · {inv.date.toLocaleDateString()}

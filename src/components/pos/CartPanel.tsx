@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Search, Trash2, Loader2 } from "lucide-react";
+import { Search, Trash2, Loader2, CheckCircle2 } from "lucide-react";
 import { searchAvailableUnits, checkoutInvoice, type AvailableUnit } from "@/lib/actions/pos";
 import { CategoryFilter } from "@/components/pos/CategoryFilter";
 
@@ -86,9 +86,12 @@ export function CartPanel() {
 
   if (invoiceNumber) {
     return (
-      <div className="rounded-lg border border-black/10 bg-white p-5 text-center dark:border-white/10 dark:bg-black">
-        <p className="text-sm text-black/60 dark:text-white/60">Invoice created</p>
-        <p className="mt-1 text-lg font-bold">{invoiceNumber}</p>
+      <div className="rounded-lg border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-black">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40">
+          <CheckCircle2 className="text-green-600 dark:text-green-400" size={26} />
+        </div>
+        <p className="mt-3 text-sm text-black/60 dark:text-white/60">Invoice created</p>
+        <p className="mt-1 font-mono text-xl font-bold">{invoiceNumber}</p>
         <button
           onClick={() => setInvoiceNumber(null)}
           className="mt-4 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white"
