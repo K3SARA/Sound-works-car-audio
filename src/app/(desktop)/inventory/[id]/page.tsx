@@ -26,6 +26,7 @@ export default async function ProductDetailPage({
           <h1 className="text-xl font-bold">{product.brand} {product.name}</h1>
           <p className="text-sm text-black/50 dark:text-white/50">
             Model Number {product.sku} · {product.category} · {product.warrantyMonths} month warranty
+            {product.sellingPrice && ` · Rs. ${Number(product.sellingPrice).toFixed(2)}`}
           </p>
           {product.supplier && (
             <p className="mt-1 text-xs text-black/50 dark:text-white/50">

@@ -72,8 +72,12 @@ export function StockSearch() {
                 {r.status.replace("_", " ")}
               </span>
             </div>
-            {r.location && (
-              <p className="mt-1.5 text-xs text-black/60 dark:text-white/60">Location: {r.location}</p>
+            {(r.location || r.sellingPrice) && (
+              <p className="mt-1.5 text-xs text-black/60 dark:text-white/60">
+                {r.location ? `Location: ${r.location}` : ""}
+                {r.location && r.sellingPrice ? " · " : ""}
+                {r.sellingPrice ? `Rs. ${r.sellingPrice.toFixed(2)}` : ""}
+              </p>
             )}
           </li>
         ))}

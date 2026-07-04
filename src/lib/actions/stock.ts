@@ -10,6 +10,7 @@ export type StockResult = {
   sku: string;
   status: string;
   location: string | null;
+  sellingPrice: number | null;
 };
 
 /**
@@ -47,5 +48,6 @@ export async function searchStock(query: string, category?: string): Promise<Sto
     sku: u.product.sku,
     status: u.status,
     location: u.location,
+    sellingPrice: u.product.sellingPrice ? Number(u.product.sellingPrice) : null,
   }));
 }

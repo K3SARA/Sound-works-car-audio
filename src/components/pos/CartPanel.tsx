@@ -38,7 +38,7 @@ export function CartPanel() {
   }
 
   function addToCart(unit: AvailableUnit) {
-    setCart((prev) => [...prev, { ...unit, salePrice: "" }]);
+    setCart((prev) => [...prev, { ...unit, salePrice: unit.sellingPrice ? String(unit.sellingPrice) : "" }]);
     setResults((prev) => prev.filter((r) => r.unitId !== unit.unitId));
   }
 
@@ -125,6 +125,7 @@ export function CartPanel() {
                 <p className="text-sm font-medium">{r.brand} {r.productName}</p>
                 <p className="text-xs text-black/50 dark:text-white/50">
                   SN: {r.serialNumber} {r.location ? `· ${r.location}` : ""}
+                  {r.sellingPrice ? ` · Rs. ${r.sellingPrice.toFixed(2)}` : ""}
                 </p>
               </div>
               <button

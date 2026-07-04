@@ -14,6 +14,7 @@ export type AvailableUnit = {
   sku: string;
   location: string | null;
   warrantyMonths: number;
+  sellingPrice: number | null;
 };
 
 /**
@@ -52,6 +53,7 @@ export async function searchAvailableUnits(query: string, category?: string): Pr
     sku: u.product.sku,
     location: u.location,
     warrantyMonths: u.product.warrantyMonths,
+    sellingPrice: u.product.sellingPrice ? Number(u.product.sellingPrice) : null,
   }));
 }
 

@@ -50,6 +50,7 @@ model Product {
   brand             String
   category          String
   sku               String   @unique
+  sellingPrice      Decimal? @db.Decimal(10, 2) // suggested price; sale price is still editable per-invoice at checkout
   warrantyMonths    Int // default warranty duration applied to units sold
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
