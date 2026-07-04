@@ -5,7 +5,7 @@ import { getInvoiceDocument } from "@/lib/invoice";
 import { InvoiceDocument } from "@/components/reports/InvoiceDocument";
 import { PrintButton } from "@/components/reports/PrintButton";
 
-export default async function InvoiceDetailPage({
+export default async function MobileInvoicePage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -18,9 +18,9 @@ export default async function InvoiceDetailPage({
   return (
     <div>
       <div className="no-print mb-4 flex items-center justify-between">
-        <Link href="/reports" className="flex items-center gap-1.5 text-sm text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white">
+        <Link href="/pos" className="flex items-center gap-1.5 text-sm text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white">
           <ArrowLeft size={16} />
-          Back to reports
+          Back to billing
         </Link>
         <PrintButton />
       </div>

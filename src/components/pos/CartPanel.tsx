@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Search, Trash2, Loader2, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { Search, Trash2, Loader2, CheckCircle2, Printer } from "lucide-react";
 import { searchAvailableUnits, checkoutInvoice, type AvailableUnit } from "@/lib/actions/pos";
 import { CategoryFilter } from "@/components/pos/CategoryFilter";
 
@@ -15,6 +16,7 @@ export function CartPanel() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState<string | null>(null);
+  const [invoiceId, setInvoiceId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSearching, startSearch] = useTransition();
   const [isCheckingOut, startCheckout] = useTransition();
@@ -75,6 +77,7 @@ export function CartPanel() {
           })),
         });
         setInvoiceNumber(result.invoiceNumber);
+        setInvoiceId(result.invoiceId);
         setCart([]);
         setCustomerName("");
         setCustomerPhone("");
@@ -84,7 +87,7 @@ export function CartPanel() {
     });
   }
 
-  if (invoiceNumber) {
+  if (invoiceNumber && invoiceId) {
     return (
       <div className="rounded-lg border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-black">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40">
@@ -92,9 +95,21 @@ export function CartPanel() {
         </div>
         <p className="mt-3 text-sm text-black/60 dark:text-white/60">Invoice created</p>
         <p className="mt-1 font-mono text-xl font-bold">{invoiceNumber}</p>
+
+        <Link
+          href={`/pos/invoice/${invoiceId}`}
+          className="mt-4 flex items-center justify-center gap-2 rounded-md border border-black/15 py-2.5 text-sm font-semibold text-black/80 dark:border-white/15 dark:text-white/80"
+        >
+          <Printer size={16} />
+          Preview & print invoice
+        </Link>
+
         <button
-          onClick={() => setInvoiceNumber(null)}
-          className="mt-4 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+          onClick={() => {
+            setInvoiceNumber(null);
+            setInvoiceId(null);
+          }}
+          className="mt-2 w-full rounded-md bg-red-600 py-2.5 text-sm font-semibold text-white"
         >
           New sale
         </button>
