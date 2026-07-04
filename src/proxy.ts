@@ -5,7 +5,7 @@ import { detectDevice } from "@/lib/device";
 // Next.js 16 renamed the `middleware` file convention to `proxy` — see
 // node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md
 
-const DESKTOP_ROUTES = ["/dashboard", "/inventory", "/reports", "/warranty"];
+const DESKTOP_ROUTES = ["/dashboard", "/inventory", "/suppliers", "/reports", "/warranty"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
