@@ -61,6 +61,7 @@ export async function searchAvailableUnits(query: string, category?: string): Pr
 const checkoutSchema = z.object({
   customerName: z.string().min(1),
   customerPhone: z.string().min(1),
+  vehicleNumber: z.string().optional(),
   items: z
     .array(
       z.object({
@@ -86,6 +87,7 @@ export async function checkoutInvoice(input: CheckoutInput) {
       data: {
         customerName: data.customerName,
         customerPhone: data.customerPhone,
+        vehicleNumber: data.vehicleNumber || null,
         totalAmount,
         createdById: session?.user?.id,
         items: {

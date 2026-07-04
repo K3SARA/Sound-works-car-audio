@@ -15,6 +15,7 @@ export function CartPanel() {
   const [cart, setCart] = useState<CartLine[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [vehicleNumber, setVehicleNumber] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState<string | null>(null);
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +71,7 @@ export function CartPanel() {
         const result = await checkoutInvoice({
           customerName,
           customerPhone,
+          vehicleNumber: vehicleNumber.trim() || undefined,
           items: cart.map((c) => ({
             unitId: c.unitId,
             salePrice: Number(c.salePrice),
@@ -81,6 +83,7 @@ export function CartPanel() {
         setCart([]);
         setCustomerName("");
         setCustomerPhone("");
+        setVehicleNumber("");
       } catch {
         setError("Checkout failed. Please try again.");
       }
@@ -204,6 +207,12 @@ export function CartPanel() {
             value={customerPhone}
             onChange={(e) => setCustomerPhone(e.target.value)}
             placeholder="Customer phone"
+            className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
+          />
+          <input
+            value={vehicleNumber}
+            onChange={(e) => setVehicleNumber(e.target.value)}
+            placeholder="Vehicle number (optional)"
             className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
           />
 

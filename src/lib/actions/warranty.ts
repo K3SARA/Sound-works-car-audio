@@ -16,6 +16,7 @@ export type WarrantyLookupResult = {
     invoiceNumber: string;
     customerName: string;
     customerPhone: string;
+    vehicleNumber: string | null;
     purchaseDate: string;
     salePrice: number;
     warrantyMonths: number;
@@ -54,6 +55,7 @@ export async function lookupWarranty(serialNumber: string): Promise<WarrantyLook
       invoiceNumber: formatInvoiceNumber(unit.invoiceItem.invoice.sequence),
       customerName: unit.invoiceItem.invoice.customerName,
       customerPhone: unit.invoiceItem.invoice.customerPhone,
+      vehicleNumber: unit.invoiceItem.invoice.vehicleNumber,
       purchaseDate: purchaseDate.toISOString(),
       salePrice: Number(unit.invoiceItem.salePrice),
       warrantyMonths: unit.invoiceItem.warrantyMonths,

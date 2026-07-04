@@ -87,6 +87,9 @@ export function WarrantyLookup() {
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-black/40 dark:text-white/40">Invoice</p>
                     <p className="font-mono text-base font-bold">{result.sale.invoiceNumber}</p>
+                    {result.sale.vehicleNumber && (
+                      <p className="mt-1 text-xs text-black/50 dark:text-white/50">Vehicle: {result.sale.vehicleNumber}</p>
+                    )}
                   </div>
                   <span
                     className={clsx(

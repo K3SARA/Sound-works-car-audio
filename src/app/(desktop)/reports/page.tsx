@@ -33,6 +33,7 @@ export default async function ReportsPage() {
                 </Link>
                 <p className="text-xs text-black/50 dark:text-white/50">
                   {inv.customerName} · {inv.customerPhone} · {inv.date.toLocaleDateString()}
+                  {inv.vehicleNumber ? ` · Vehicle: ${inv.vehicleNumber}` : ""}
                 </p>
                 {inv.createdBy && (
                   <p className="text-xs text-black/40 dark:text-white/40">Sold by {inv.createdBy.name}</p>

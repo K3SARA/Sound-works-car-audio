@@ -6,6 +6,7 @@ export type InvoiceDocumentData = {
   date: Date;
   customerName: string;
   customerPhone: string;
+  vehicleNumber: string | null;
   totalAmount: number;
   soldBy: string | null;
   items: {
@@ -44,12 +45,20 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceDocumentData }) {
           <p className="font-medium">{invoice.customerName}</p>
           <p>{invoice.customerPhone}</p>
         </div>
-        {invoice.soldBy && (
-          <div className="text-right">
-            <p className="font-semibold text-black/50">Sold By</p>
-            <p>{invoice.soldBy}</p>
-          </div>
-        )}
+        <div className="text-right">
+          {invoice.vehicleNumber && (
+            <>
+              <p className="font-semibold text-black/50">Vehicle No.</p>
+              <p className="font-medium">{invoice.vehicleNumber}</p>
+            </>
+          )}
+          {invoice.soldBy && (
+            <>
+              <p className="mt-1 font-semibold text-black/50">Sold By</p>
+              <p>{invoice.soldBy}</p>
+            </>
+          )}
+        </div>
       </div>
 
       <table className="mt-4 w-full border-collapse text-xs">

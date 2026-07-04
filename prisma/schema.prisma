@@ -99,6 +99,7 @@ model Invoice {
   sequence      Int      @unique @default(autoincrement()) // human-facing invoice number is derived from this, e.g. INV-000001
   customerName  String
   customerPhone String
+  vehicleNumber String?
   date          DateTime @default(now())
   totalAmount   Decimal  @db.Decimal(10, 2)
 
