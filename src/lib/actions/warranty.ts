@@ -11,6 +11,7 @@ export type WarrantyLookupResult = {
   serialNumber: string;
   productName: string;
   brand: string;
+  supplierName: string | null;
   status: string;
   sale: {
     invoiceNumber: string;
@@ -37,7 +38,7 @@ export async function lookupWarranty(serialNumber: string): Promise<WarrantyLook
   const unit = await prisma.inventoryUnit.findUnique({
     where: { serialNumber: serialNumber.trim() },
     include: {
-      product: true,
+      product: { include: { supplier: true } },
       invoiceItem: { include: { invoice: true } },
       warrantyClaims: { orderBy: { dateClaimed: "desc" } },
     },
@@ -69,6 +70,7 @@ export async function lookupWarranty(serialNumber: string): Promise<WarrantyLook
     serialNumber: unit.serialNumber,
     productName: unit.product.name,
     brand: unit.product.brand,
+    supplierName: unit.product.supplier?.name ?? null,
     status: unit.status,
     sale,
     claims: unit.warrantyClaims.map((c) => ({

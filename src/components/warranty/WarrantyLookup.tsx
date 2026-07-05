@@ -75,6 +75,9 @@ export function WarrantyLookup() {
               <div>
                 <p className="text-sm font-bold">{result.brand} {result.productName}</p>
                 <p className="font-mono text-xs text-black/50 dark:text-white/50">SN: {result.serialNumber}</p>
+                {result.supplierName && (
+                  <p className="text-xs text-black/50 dark:text-white/50">Supplier: {result.supplierName}</p>
+                )}
               </div>
               <span className="shrink-0 rounded-full bg-black/5 px-2.5 py-1 text-[11px] font-semibold text-black/60 dark:bg-white/10 dark:text-white/60">
                 {result.status.replace("_", " ")}
