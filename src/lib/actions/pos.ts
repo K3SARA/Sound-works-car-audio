@@ -125,3 +125,29 @@ export async function checkoutInvoice(input: CheckoutInput) {
   revalidatePath("/stock");
   return { invoiceId: invoice.id, invoiceNumber: formatInvoiceNumber(invoice.sequence) };
 }
+
+/**
+ * Deletes an invoice (test data, mistakes, cancellations) and returns its sold unit(s) to
+ * IN_STOCK first, so they aren't left stranded as "sold" with no invoice to point to.
+ */
+export async function deleteInvoice(invoiceId: string) {
+  await prisma.$transaction(async (tx) => {
+    const invoice = await tx.invoice.findUnique({
+      where: { id: invoiceId },
+      include: { items: true },
+    });
+    if (!invoice) return;
+
+    await tx.inventoryUnit.updateMany({
+      where: { id: { in: invoice.items.map((item) => item.inventoryUnitId) } },
+      data: { status: "IN_STOCK" },
+    });
+
+    await tx.invoice.delete({ where: { id: invoiceId } });
+  });
+
+  revalidatePath("/reports");
+  revalidatePath("/inventory");
+  revalidatePath("/stock");
+  revalidatePath("/pos");
+}

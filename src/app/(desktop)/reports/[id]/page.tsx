@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { getInvoiceDocument } from "@/lib/invoice";
 import { InvoiceDocument } from "@/components/reports/InvoiceDocument";
 import { PrintButton } from "@/components/reports/PrintButton";
+import { DeleteInvoiceButton } from "@/components/reports/DeleteInvoiceButton";
 
 export default async function InvoiceDetailPage({
   params,
@@ -22,7 +23,10 @@ export default async function InvoiceDetailPage({
           <ArrowLeft size={16} />
           Back to reports
         </Link>
-        <PrintButton />
+        <div className="flex items-center gap-2">
+          <DeleteInvoiceButton invoiceId={id} redirectAfter="/reports" />
+          <PrintButton />
+        </div>
       </div>
 
       <div className="mx-auto max-w-[148mm] border border-black/10 shadow-sm print:max-w-none print:border-0 print:shadow-none">

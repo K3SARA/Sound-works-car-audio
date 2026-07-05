@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatInvoiceNumber } from "@/lib/invoice-number";
+import { DeleteInvoiceButton } from "@/components/reports/DeleteInvoiceButton";
 
 async function getInvoices() {
   return prisma.invoice.findMany({
@@ -39,7 +40,10 @@ export default async function ReportsPage() {
                   <p className="text-xs text-black/40 dark:text-white/40">Sold by {inv.createdBy.name}</p>
                 )}
               </div>
-              <p className="text-sm font-bold">Rs. {Number(inv.totalAmount).toFixed(2)}</p>
+              <div className="flex items-center gap-3">
+                <p className="text-sm font-bold">Rs. {Number(inv.totalAmount).toFixed(2)}</p>
+                <DeleteInvoiceButton invoiceId={inv.id} />
+              </div>
             </div>
 
             <ul className="mt-3 space-y-1 border-t border-black/10 pt-2 text-xs dark:border-white/10">
