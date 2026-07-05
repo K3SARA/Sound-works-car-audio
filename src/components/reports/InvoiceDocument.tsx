@@ -69,7 +69,7 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceDocumentData }) {
             <th className="py-2 pl-2 pr-2 font-semibold">Item</th>
             <th className="py-2 pr-2 font-semibold">Serial No.</th>
             <th className="py-2 pr-2 font-semibold">Warranty</th>
-            <th className="py-2 pr-2 text-right font-semibold text-black">Price</th>
+            <th className="bg-black py-2 pr-2 text-right font-semibold text-white">Price</th>
           </tr>
         </thead>
         <tbody>
