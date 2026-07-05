@@ -33,8 +33,10 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceDocumentData }) {
           </div>
         </div>
         <div className="text-right">
-          <p className="text-lg font-bold tracking-wide text-red-600">INVOICE</p>
-          <p className="font-mono text-xs font-semibold text-black">{invoice.invoiceNumber}</p>
+          <p className="inline-block rounded-sm bg-red-600 px-3 py-1 text-lg font-bold tracking-[0.15em] text-white">
+            INVOICE
+          </p>
+          <p className="mt-1.5 font-mono text-xs font-semibold text-black">{invoice.invoiceNumber}</p>
           <p className="text-xs text-black/60">{invoice.date.toLocaleDateString()}</p>
         </div>
       </div>
@@ -67,7 +69,7 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceDocumentData }) {
             <th className="py-2 pl-2 pr-2 font-semibold">Item</th>
             <th className="py-2 pr-2 font-semibold">Serial No.</th>
             <th className="py-2 pr-2 font-semibold">Warranty</th>
-            <th className="py-2 pr-2 text-right font-semibold">Price</th>
+            <th className="py-2 pr-2 text-right font-semibold text-black">Price</th>
           </tr>
         </thead>
         <tbody>
