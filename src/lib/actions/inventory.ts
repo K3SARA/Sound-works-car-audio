@@ -160,6 +160,48 @@ export async function addInventoryUnits(_prevState: ActionResult, formData: Form
   return { success: `Added ${count} serial number${count === 1 ? "" : "s"}.` };
 }
 
+const generateUnitsSchema = z.object({
+  productId: z.string().min(1),
+  quantity: z.coerce.number().int().min(1).max(500),
+  location: z.string().optional(),
+  costPrice: z.coerce.number().nonnegative().optional(),
+});
+
+/**
+ * For stock that has no manufacturer serial (cables, accessories, hardware) —
+ * auto-generates a unique shop-assigned ID per unit (SKU-0001, SKU-0002, ...)
+ * so it still gets full serial-level tracking, without staff having to invent
+ * and type each one by hand.
+ */
+export async function generateInventoryUnits(_prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  const data = generateUnitsSchema.parse(Object.fromEntries(formData));
+
+  const product = await prisma.product.findUnique({ where: { id: data.productId }, select: { sku: true } });
+  if (!product) return { error: "Product not found." };
+
+  const existingCount = await prisma.inventoryUnit.count({ where: { productId: data.productId } });
+
+  const serials = Array.from(
+    { length: data.quantity },
+    (_, i) => `${product.sku}-${String(existingCount + i + 1).padStart(4, "0")}`
+  );
+
+  const { count } = await prisma.inventoryUnit.createMany({
+    skipDuplicates: true,
+    data: serials.map((serialNumber) => ({
+      productId: data.productId,
+      serialNumber,
+      location: data.location || null,
+      costPrice: data.costPrice,
+    })),
+  });
+
+  revalidatePath("/inventory");
+  revalidatePath(`/inventory/${data.productId}`);
+
+  return { success: `Added ${count} unit${count === 1 ? "" : "s"} — IDs ${serials[0]} through ${serials[serials.length - 1]}.` };
+}
+
 export async function deleteInventoryUnit(unitId: string, productId: string) {
   await prisma.inventoryUnit.delete({ where: { id: unitId } });
   revalidatePath(`/inventory/${productId}`);
