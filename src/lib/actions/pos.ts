@@ -59,8 +59,8 @@ export async function searchAvailableUnits(query: string, category?: string): Pr
 }
 
 const checkoutSchema = z.object({
-  customerName: z.string().min(1),
-  customerPhone: z.string().min(1),
+  customerName: z.string().optional(),
+  customerPhone: z.string().optional(),
   vehicleNumber: z.string().optional(),
   items: z
     .array(
@@ -75,18 +75,30 @@ const checkoutSchema = z.object({
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
 
-/** Sells the scanned serial numbers: creates the invoice, freezes warranty terms, and flips units to SOLD. */
+/**
+ * Sells the scanned serial numbers: creates the invoice, freezes warranty terms, and flips
+ * units to SOLD. Customer name/phone are only required when at least one item in the sale
+ * carries a warranty — a no-warranty cash sale can go through without capturing them.
+ */
 export async function checkoutInvoice(input: CheckoutInput) {
   const data = checkoutSchema.parse(input);
   const session = await auth();
+
+  const customerName = data.customerName?.trim() ?? "";
+  const customerPhone = data.customerPhone?.trim() ?? "";
+  const hasWarrantyItem = data.items.some((item) => item.warrantyMonths > 0);
+
+  if (hasWarrantyItem && (!customerName || !customerPhone)) {
+    throw new Error("Customer name and phone are required when any item in the sale has a warranty.");
+  }
 
   const totalAmount = data.items.reduce((sum, i) => sum + i.salePrice, 0);
 
   const invoice = await prisma.$transaction(async (tx) => {
     const created = await tx.invoice.create({
       data: {
-        customerName: data.customerName,
-        customerPhone: data.customerPhone,
+        customerName: customerName || "Walk-in Customer",
+        customerPhone: customerPhone || "-",
         vehicleNumber: data.vehicleNumber || null,
         totalAmount,
         createdById: session?.user?.id,

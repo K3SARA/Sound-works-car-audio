@@ -66,10 +66,10 @@ export function CartPanel() {
   }
 
   const total = cart.reduce((sum, c) => sum + (Number(c.salePrice) || 0), 0);
+  const hasWarrantyItem = cart.some((c) => c.warrantyMonths > 0);
   const canCheckout =
     cart.length > 0 &&
-    customerName.trim().length > 0 &&
-    customerPhone.trim().length > 0 &&
+    (!hasWarrantyItem || (customerName.trim().length > 0 && customerPhone.trim().length > 0)) &&
     cart.every((c) => Number(c.salePrice) > 0);
 
   function submitCheckout() {
@@ -92,8 +92,8 @@ export function CartPanel() {
         setCustomerName("");
         setCustomerPhone("");
         setVehicleNumber("");
-      } catch {
-        setError("Checkout failed. Please try again.");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Checkout failed. Please try again.");
       }
     });
   }
@@ -205,16 +205,21 @@ export function CartPanel() {
 
       {cart.length > 0 && (
         <div className="space-y-2 rounded-md border border-black/10 p-3 dark:border-white/10">
+          <p className="text-xs text-black/50 dark:text-white/50">
+            {hasWarrantyItem
+              ? "Customer name & phone are required — this sale includes a warrantied item."
+              : "Customer name & phone are optional — no warranty items in this sale."}
+          </p>
           <input
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
-            placeholder="Customer name"
+            placeholder={hasWarrantyItem ? "Customer name" : "Customer name (optional)"}
             className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
           />
           <input
             value={customerPhone}
             onChange={(e) => setCustomerPhone(e.target.value)}
-            placeholder="Customer phone"
+            placeholder={hasWarrantyItem ? "Customer phone" : "Customer phone (optional)"}
             className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
           />
           <input
