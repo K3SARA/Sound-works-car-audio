@@ -63,22 +63,22 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceDocumentData }) {
 
       <table className="mt-4 w-full border-collapse text-xs">
         <thead>
-          <tr className="border-y border-black/30 text-left">
-            <th className="py-1.5 pr-2 font-semibold">Item</th>
-            <th className="py-1.5 pr-2 font-semibold">Serial No.</th>
-            <th className="py-1.5 pr-2 font-semibold">Warranty</th>
-            <th className="py-1.5 text-right font-semibold">Price</th>
+          <tr className="bg-red-600 text-left text-white">
+            <th className="py-2 pl-2 pr-2 font-semibold">Item</th>
+            <th className="py-2 pr-2 font-semibold">Serial No.</th>
+            <th className="py-2 pr-2 font-semibold">Warranty</th>
+            <th className="py-2 pr-2 text-right font-semibold">Price</th>
           </tr>
         </thead>
         <tbody>
-          {invoice.items.map((item) => (
-            <tr key={item.id} className="border-b border-black/10 align-top">
-              <td className="py-1.5 pr-2">
+          {invoice.items.map((item, i) => (
+            <tr key={item.id} className={i % 2 === 1 ? "bg-red-50 align-top" : "bg-white align-top"}>
+              <td className="py-1.5 pl-2 pr-2">
                 {item.brand} {item.productName}
               </td>
               <td className="py-1.5 pr-2 font-mono">{item.serialNumber}</td>
               <td className="py-1.5 pr-2">{item.warrantyMonths} mo</td>
-              <td className="py-1.5 text-right">Rs. {item.salePrice.toFixed(2)}</td>
+              <td className="py-1.5 pr-2 text-right">Rs. {item.salePrice.toFixed(2)}</td>
             </tr>
           ))}
         </tbody>

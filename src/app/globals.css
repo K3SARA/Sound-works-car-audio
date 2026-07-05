@@ -40,4 +40,11 @@ body {
   body {
     background: #fff;
   }
+
+  /* Browsers strip background colors by default when printing (to save ink) —
+     this forces the invoice table's red header / striped rows to actually print. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
