@@ -19,15 +19,21 @@ async function getProducts(category?: string) {
 export default async function InventoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; error?: string }>;
 }) {
-  const { category } = await searchParams;
+  const { category, error } = await searchParams;
   const [products, categories] = await Promise.all([getProducts(category), getCategories()]);
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="mb-4 text-xl font-bold">Inventory</h1>
+
+        {error && (
+          <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
+            {error}
+          </p>
+        )}
 
         <div className="mb-3 flex flex-wrap gap-1.5">
           <Link

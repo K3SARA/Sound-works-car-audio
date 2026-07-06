@@ -120,7 +120,14 @@ export async function updateProduct(
 }
 
 export async function deleteProduct(productId: string) {
-  await prisma.product.delete({ where: { id: productId } });
+  try {
+    await prisma.product.delete({ where: { id: productId } });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {
+      redirect(`/inventory?error=${encodeURIComponent("Can't delete a product that still has inventory units. Remove its units first.")}`);
+    }
+    throw err;
+  }
   revalidatePath("/inventory");
 }
 
@@ -199,11 +206,26 @@ export async function generateInventoryUnits(_prevState: ActionResult, formData:
   revalidatePath("/inventory");
   revalidatePath(`/inventory/${data.productId}`);
 
+  const skipped = serials.length - count;
+  if (skipped > 0) {
+    return {
+      error: `Added ${count} of ${serials.length} — ${skipped} generated ID${skipped === 1 ? "" : "s"} collided with existing serial number${skipped === 1 ? "" : "s"} and ${skipped === 1 ? "was" : "were"} skipped.`,
+    };
+  }
   return { success: `Added ${count} unit${count === 1 ? "" : "s"} — IDs ${serials[0]} through ${serials[serials.length - 1]}.` };
 }
 
 export async function deleteInventoryUnit(unitId: string, productId: string) {
-  await prisma.inventoryUnit.delete({ where: { id: unitId } });
+  try {
+    await prisma.inventoryUnit.delete({ where: { id: unitId } });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {
+      redirect(
+        `/inventory/${productId}?error=${encodeURIComponent("Can't remove a unit that has warranty claim history.")}`
+      );
+    }
+    throw err;
+  }
   revalidatePath(`/inventory/${productId}`);
 }
 

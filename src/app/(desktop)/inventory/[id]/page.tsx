@@ -7,10 +7,13 @@ import { AddSerialsForm } from "@/components/inventory/AddSerialsForm";
 
 export default async function ProductDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const { error } = await searchParams;
 
   const product = await prisma.product.findUnique({
     where: { id },
@@ -21,6 +24,12 @@ export default async function ProductDetailPage({
 
   return (
     <div className="space-y-6">
+      {error && (
+        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
+          {error}
+        </p>
+      )}
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-bold">{product.brand} {product.name}</h1>

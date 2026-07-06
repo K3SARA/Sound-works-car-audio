@@ -173,20 +173,27 @@ export async function recordPayment(_prevState: { error?: string; success?: stri
 
 /**
  * Deletes an invoice (test data, mistakes, cancellations) and returns its sold unit(s) to
- * IN_STOCK first, so they aren't left stranded as "sold" with no invoice to point to.
+ * IN_STOCK first, so they aren't left stranded as "sold" with no invoice to point to. Only
+ * units still marked SOLD are reverted — one that's since moved to IN_REPAIR (a warranty
+ * claim was logged) or RETIRED is left alone, since deleting the invoice shouldn't make a
+ * broken/scrapped unit look sellable again.
  */
 export async function deleteInvoice(invoiceId: string) {
   await prisma.$transaction(async (tx) => {
     const invoice = await tx.invoice.findUnique({
       where: { id: invoiceId },
-      include: { items: true },
+      include: { items: { include: { inventoryUnit: true } } },
     });
     if (!invoice) return;
 
-    await tx.inventoryUnit.updateMany({
-      where: { id: { in: invoice.items.map((item) => item.inventoryUnitId) } },
-      data: { status: "IN_STOCK" },
-    });
+    const soldUnitIds = invoice.items.filter((item) => item.inventoryUnit.status === "SOLD").map((item) => item.inventoryUnitId);
+
+    if (soldUnitIds.length > 0) {
+      await tx.inventoryUnit.updateMany({
+        where: { id: { in: soldUnitIds } },
+        data: { status: "IN_STOCK" },
+      });
+    }
 
     await tx.invoice.delete({ where: { id: invoiceId } });
   });
