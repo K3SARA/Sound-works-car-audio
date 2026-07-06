@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import { clsx } from "clsx";
 import { Search, Trash2, Loader2, CheckCircle2, Printer } from "lucide-react";
 import { searchAvailableUnits, checkoutInvoice, type AvailableUnit } from "@/lib/actions/pos";
 import { CategoryFilter } from "@/components/pos/CategoryFilter";
@@ -16,8 +17,11 @@ export function CartPanel() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
+  const [isCredit, setIsCredit] = useState(false);
+  const [amountPaidInput, setAmountPaidInput] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState<string | null>(null);
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
+  const [balanceDue, setBalanceDue] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isSearching, startSearch] = useTransition();
   const [isCheckingOut, startCheckout] = useTransition();
@@ -67,9 +71,12 @@ export function CartPanel() {
 
   const total = cart.reduce((sum, c) => sum + (Number(c.salePrice) || 0), 0);
   const hasWarrantyItem = cart.some((c) => c.warrantyMonths > 0);
+  const requiresCustomerInfo = hasWarrantyItem || isCredit;
+  const amountPaidNow = isCredit ? Number(amountPaidInput) || 0 : total;
+  const creditBalance = Math.max(total - amountPaidNow, 0);
   const canCheckout =
     cart.length > 0 &&
-    (!hasWarrantyItem || (customerName.trim().length > 0 && customerPhone.trim().length > 0)) &&
+    (!requiresCustomerInfo || (customerName.trim().length > 0 && customerPhone.trim().length > 0)) &&
     cart.every((c) => Number(c.salePrice) > 0);
 
   function submitCheckout() {
@@ -80,6 +87,7 @@ export function CartPanel() {
           customerName,
           customerPhone,
           vehicleNumber: vehicleNumber.trim() || undefined,
+          amountPaid: isCredit ? amountPaidNow : undefined,
           items: cart.map((c) => ({
             unitId: c.unitId,
             salePrice: Number(c.salePrice),
@@ -88,10 +96,13 @@ export function CartPanel() {
         });
         setInvoiceNumber(result.invoiceNumber);
         setInvoiceId(result.invoiceId);
+        setBalanceDue(result.balanceDue);
         setCart([]);
         setCustomerName("");
         setCustomerPhone("");
         setVehicleNumber("");
+        setIsCredit(false);
+        setAmountPaidInput("");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Checkout failed. Please try again.");
       }
@@ -106,6 +117,11 @@ export function CartPanel() {
         </div>
         <p className="mt-3 text-sm text-black/60 dark:text-white/60">Invoice created</p>
         <p className="mt-1 font-mono text-xl font-bold">{invoiceNumber}</p>
+        {balanceDue > 0 && (
+          <p className="mt-2 inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+            Credit sale — Rs. {balanceDue.toFixed(2)} still due
+          </p>
+        )}
 
         <Link
           href={`/pos/invoice/${invoiceId}`}
@@ -206,20 +222,20 @@ export function CartPanel() {
       {cart.length > 0 && (
         <div className="space-y-2 rounded-md border border-black/10 p-3 dark:border-white/10">
           <p className="text-xs text-black/50 dark:text-white/50">
-            {hasWarrantyItem
-              ? "Customer name & phone are required — this sale includes a warrantied item."
+            {requiresCustomerInfo
+              ? `Customer name & phone are required — ${isCredit ? "this is a credit sale" : "this sale includes a warrantied item"}.`
               : "Customer name & phone are optional — no warranty items in this sale."}
           </p>
           <input
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
-            placeholder={hasWarrantyItem ? "Customer name" : "Customer name (optional)"}
+            placeholder={requiresCustomerInfo ? "Customer name" : "Customer name (optional)"}
             className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
           />
           <input
             value={customerPhone}
             onChange={(e) => setCustomerPhone(e.target.value)}
-            placeholder={hasWarrantyItem ? "Customer phone" : "Customer phone (optional)"}
+            placeholder={requiresCustomerInfo ? "Customer phone" : "Customer phone (optional)"}
             className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
           />
           <input
@@ -229,10 +245,52 @@ export function CartPanel() {
             className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
           />
 
+          <div className="flex gap-1.5 pt-1">
+            <button
+              type="button"
+              onClick={() => setIsCredit(false)}
+              className={clsx(
+                "flex-1 rounded-md py-1.5 text-xs font-semibold",
+                !isCredit ? "bg-black text-white dark:bg-white dark:text-black" : "bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/60"
+              )}
+            >
+              Paid in full
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsCredit(true)}
+              className={clsx(
+                "flex-1 rounded-md py-1.5 text-xs font-semibold",
+                isCredit ? "bg-amber-500 text-white" : "bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/60"
+              )}
+            >
+              Credit sale
+            </button>
+          </div>
+
+          {isCredit && (
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              max={total}
+              value={amountPaidInput}
+              onChange={(e) => setAmountPaidInput(e.target.value)}
+              placeholder="Amount received now (Rs.) — leave blank if none"
+              className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
+            />
+          )}
+
           <div className="flex items-center justify-between pt-1 text-sm font-semibold">
             <span>Total</span>
             <span>Rs. {total.toFixed(2)}</span>
           </div>
+          {isCredit && (
+            <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-400">
+              <span>Balance due</span>
+              <span>Rs. {creditBalance.toFixed(2)}</span>
+            </div>
+          )}
 
           {error && <p className="text-xs text-red-600">{error}</p>}
 

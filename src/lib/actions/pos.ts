@@ -62,6 +62,7 @@ const checkoutSchema = z.object({
   customerName: z.string().optional(),
   customerPhone: z.string().optional(),
   vehicleNumber: z.string().optional(),
+  amountPaid: z.coerce.number().min(0).optional(), // omit/undefined = paid in full
   items: z
     .array(
       z.object({
@@ -77,8 +78,9 @@ export type CheckoutInput = z.infer<typeof checkoutSchema>;
 
 /**
  * Sells the scanned serial numbers: creates the invoice, freezes warranty terms, and flips
- * units to SOLD. Customer name/phone are only required when at least one item in the sale
- * carries a warranty — a no-warranty cash sale can go through without capturing them.
+ * units to SOLD. Customer name/phone are required whenever any item carries a warranty, or
+ * whenever the sale isn't paid in full (a credit sale) — either way, you need to know who
+ * to follow up with.
  */
 export async function checkoutInvoice(input: CheckoutInput) {
   const data = checkoutSchema.parse(input);
@@ -88,11 +90,17 @@ export async function checkoutInvoice(input: CheckoutInput) {
   const customerPhone = data.customerPhone?.trim() ?? "";
   const hasWarrantyItem = data.items.some((item) => item.warrantyMonths > 0);
 
-  if (hasWarrantyItem && (!customerName || !customerPhone)) {
-    throw new Error("Customer name and phone are required when any item in the sale has a warranty.");
-  }
-
   const totalAmount = data.items.reduce((sum, i) => sum + i.salePrice, 0);
+  const amountPaid = data.amountPaid === undefined ? totalAmount : Math.min(data.amountPaid, totalAmount);
+  const isCredit = amountPaid < totalAmount;
+
+  if ((hasWarrantyItem || isCredit) && (!customerName || !customerPhone)) {
+    throw new Error(
+      isCredit
+        ? "Customer name and phone are required for a credit sale."
+        : "Customer name and phone are required when any item in the sale has a warranty."
+    );
+  }
 
   const invoice = await prisma.$transaction(async (tx) => {
     const created = await tx.invoice.create({
@@ -101,6 +109,7 @@ export async function checkoutInvoice(input: CheckoutInput) {
         customerPhone: customerPhone || "-",
         vehicleNumber: data.vehicleNumber || null,
         totalAmount,
+        amountPaid,
         createdById: session?.user?.id,
         items: {
           create: data.items.map((item) => ({
@@ -123,7 +132,43 @@ export async function checkoutInvoice(input: CheckoutInput) {
 
   revalidatePath("/pos");
   revalidatePath("/stock");
-  return { invoiceId: invoice.id, invoiceNumber: formatInvoiceNumber(invoice.sequence) };
+  revalidatePath("/reports");
+  return {
+    invoiceId: invoice.id,
+    invoiceNumber: formatInvoiceNumber(invoice.sequence),
+    balanceDue: totalAmount - amountPaid,
+  };
+}
+
+const recordPaymentSchema = z.object({
+  invoiceId: z.string().min(1),
+  amount: z.coerce.number().positive(),
+});
+
+/** Logs an additional payment toward settling a credit / partially-paid invoice. */
+export async function recordPayment(_prevState: { error?: string; success?: string }, formData: FormData) {
+  const parsed = recordPaymentSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+  const { invoiceId, amount } = parsed.data;
+
+  const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
+  if (!invoice) return { error: "Invoice not found." };
+
+  const balanceDue = Number(invoice.totalAmount) - Number(invoice.amountPaid);
+  if (amount > balanceDue) {
+    return { error: `That's more than the remaining balance of Rs. ${balanceDue.toFixed(2)}.` };
+  }
+
+  await prisma.invoice.update({
+    where: { id: invoiceId },
+    data: { amountPaid: { increment: amount } },
+  });
+
+  revalidatePath("/reports");
+  revalidatePath(`/reports/${invoiceId}`);
+  return { success: `Recorded Rs. ${amount.toFixed(2)} payment.` };
 }
 
 /**

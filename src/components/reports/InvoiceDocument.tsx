@@ -8,6 +8,7 @@ export type InvoiceDocumentData = {
   customerPhone: string;
   vehicleNumber: string | null;
   totalAmount: number;
+  amountPaid: number;
   soldBy: string | null;
   items: {
     id: string;
@@ -21,6 +22,9 @@ export type InvoiceDocumentData = {
 
 /** A5 printable invoice — see .no-print / @page rules in globals.css for the print layout. */
 export function InvoiceDocument({ invoice }: { invoice: InvoiceDocumentData }) {
+  const balanceDue = invoice.totalAmount - invoice.amountPaid;
+  const isCredit = balanceDue > 0.005;
+
   return (
     <div className="bg-white p-6 text-black print:p-0">
       <div className="flex items-start justify-between gap-4 border-b-2 border-red-600 pb-4">
@@ -87,9 +91,23 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceDocumentData }) {
       </table>
 
       <div className="mt-3 flex justify-end border-t-2 border-red-600 pt-2">
-        <div className="flex w-44 justify-between text-sm font-bold">
-          <span>Total</span>
-          <span>Rs. {invoice.totalAmount.toFixed(2)}</span>
+        <div className="w-48 space-y-1">
+          <div className="flex justify-between text-sm font-bold">
+            <span>Total</span>
+            <span>Rs. {invoice.totalAmount.toFixed(2)}</span>
+          </div>
+          {isCredit && (
+            <>
+              <div className="flex justify-between text-xs text-black/60">
+                <span>Amount Paid</span>
+                <span>Rs. {invoice.amountPaid.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm font-bold text-red-600">
+                <span>Balance Due</span>
+                <span>Rs. {balanceDue.toFixed(2)}</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

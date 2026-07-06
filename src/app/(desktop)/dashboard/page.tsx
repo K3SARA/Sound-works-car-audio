@@ -4,18 +4,25 @@ async function getStats() {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
-  const [inStock, soldToday, pendingClaims, totalRevenue] = await Promise.all([
+  const [inStock, soldToday, pendingClaims, totalRevenue, unsettledInvoices] = await Promise.all([
     prisma.inventoryUnit.count({ where: { status: "IN_STOCK" } }),
     prisma.invoice.count({ where: { date: { gte: startOfDay } } }),
     prisma.warrantyClaim.count({ where: { status: "PENDING" } }),
     prisma.invoice.aggregate({ _sum: { totalAmount: true }, where: { date: { gte: startOfDay } } }),
+    prisma.invoice.findMany({ select: { totalAmount: true, amountPaid: true } }),
   ]);
+
+  const outstandingCredit = unsettledInvoices.reduce(
+    (sum, inv) => sum + Math.max(Number(inv.totalAmount) - Number(inv.amountPaid), 0),
+    0
+  );
 
   return {
     inStock,
     soldToday,
     pendingClaims,
     revenueToday: totalRevenue._sum.totalAmount ?? 0,
+    outstandingCredit,
   };
 }
 
@@ -27,6 +34,7 @@ export default async function DashboardPage() {
     { label: "Invoices today", value: stats.soldToday },
     { label: "Revenue today", value: `Rs. ${Number(stats.revenueToday).toFixed(2)}` },
     { label: "Pending warranty claims", value: stats.pendingClaims },
+    { label: "Outstanding credit", value: `Rs. ${Number(stats.outstandingCredit).toFixed(2)}` },
   ];
 
   return (

@@ -21,6 +21,7 @@ export async function getInvoiceDocument(id: string): Promise<InvoiceDocumentDat
     customerPhone: invoice.customerPhone,
     vehicleNumber: invoice.vehicleNumber,
     totalAmount: Number(invoice.totalAmount),
+    amountPaid: Number(invoice.amountPaid),
     soldBy: invoice.createdBy?.name ?? null,
     items: invoice.items.map((item) => ({
       id: item.id,
