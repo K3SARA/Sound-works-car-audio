@@ -52,6 +52,7 @@ model Product {
   sku               String   @unique
   sellingPrice      Decimal? @db.Decimal(10, 2) // suggested price; sale price is still editable per-invoice at checkout
   warrantyMonths    Int // default warranty duration applied to units sold
+  lowStockThreshold Int      @default(3) // IN_STOCK unit count at/below this triggers the low-stock alert
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

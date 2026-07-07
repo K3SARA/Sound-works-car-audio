@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
+import { requireAdmin } from "@/lib/authz";
 
 export type ActionResult = { error?: string; success?: string };
 
@@ -16,6 +17,7 @@ const productSchema = z
     sku: z.string().min(1),
     sellingPrice: z.coerce.number().positive(),
     warrantyMonths: z.coerce.number().int().min(0),
+    lowStockThreshold: z.coerce.number().int().min(0),
     supplierId: z.string().optional(),
     newSupplierName: z.string().optional(),
     newSupplierAddress: z.string().optional(),
@@ -26,6 +28,7 @@ const productSchema = z
   });
 
 export async function createProduct(_prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
   const parsed = productSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
@@ -54,6 +57,7 @@ export async function createProduct(_prevState: ActionResult, formData: FormData
           sku: data.sku,
           sellingPrice: data.sellingPrice,
           warrantyMonths: data.warrantyMonths,
+          lowStockThreshold: data.lowStockThreshold,
           supplierId,
         },
       });
@@ -66,6 +70,7 @@ export async function createProduct(_prevState: ActionResult, formData: FormData
   }
 
   revalidatePath("/inventory");
+  revalidatePath("/dashboard");
   return { success: "Product added." };
 }
 
@@ -74,6 +79,7 @@ export async function updateProduct(
   _prevState: ActionResult,
   formData: FormData
 ): Promise<ActionResult> {
+  await requireAdmin();
   const parsed = productSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
@@ -103,6 +109,7 @@ export async function updateProduct(
           sku: data.sku,
           sellingPrice: data.sellingPrice,
           warrantyMonths: data.warrantyMonths,
+          lowStockThreshold: data.lowStockThreshold,
           supplierId,
         },
       });
@@ -116,10 +123,12 @@ export async function updateProduct(
 
   revalidatePath("/inventory");
   revalidatePath(`/inventory/${productId}`);
+  revalidatePath("/dashboard");
   redirect(`/inventory/${productId}`);
 }
 
 export async function deleteProduct(productId: string) {
+  await requireAdmin();
   try {
     await prisma.product.delete({ where: { id: productId } });
   } catch (err) {
@@ -140,6 +149,7 @@ const unitsSchema = z.object({
 
 /** Accepts one serial number per line so a whole shipment can be received at once — every unit is its own row, never a quantity count. */
 export async function addInventoryUnits(_prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
   const raw = Object.fromEntries(formData);
   const data = unitsSchema.parse(raw);
 
@@ -157,6 +167,8 @@ export async function addInventoryUnits(_prevState: ActionResult, formData: Form
 
   revalidatePath("/inventory");
   revalidatePath(`/inventory/${data.productId}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/pos");
 
   const skipped = serials.length - count;
   if (skipped > 0) {
@@ -181,6 +193,7 @@ const generateUnitsSchema = z.object({
  * and type each one by hand.
  */
 export async function generateInventoryUnits(_prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
   const data = generateUnitsSchema.parse(Object.fromEntries(formData));
 
   const product = await prisma.product.findUnique({ where: { id: data.productId }, select: { sku: true } });
@@ -205,6 +218,8 @@ export async function generateInventoryUnits(_prevState: ActionResult, formData:
 
   revalidatePath("/inventory");
   revalidatePath(`/inventory/${data.productId}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/pos");
 
   const skipped = serials.length - count;
   if (skipped > 0) {
@@ -216,6 +231,7 @@ export async function generateInventoryUnits(_prevState: ActionResult, formData:
 }
 
 export async function deleteInventoryUnit(unitId: string, productId: string) {
+  await requireAdmin();
   try {
     await prisma.inventoryUnit.delete({ where: { id: unitId } });
   } catch (err) {
@@ -227,9 +243,40 @@ export async function deleteInventoryUnit(unitId: string, productId: string) {
     throw err;
   }
   revalidatePath(`/inventory/${productId}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/pos");
 }
 
 export async function updateUnitStatus(unitId: string, productId: string, status: "IN_STOCK" | "IN_REPAIR" | "RETIRED") {
+  await requireAdmin();
   await prisma.inventoryUnit.update({ where: { id: unitId }, data: { status } });
   revalidatePath(`/inventory/${productId}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/pos");
+}
+
+export type LowStockProduct = {
+  id: string;
+  name: string;
+  brand: string;
+  inStock: number;
+  lowStockThreshold: number;
+};
+
+/** Read-only, shown on both the admin dashboard and the sales POS screen. */
+export async function getLowStockProducts(): Promise<LowStockProduct[]> {
+  const products = await prisma.product.findMany({
+    select: {
+      id: true,
+      name: true,
+      brand: true,
+      lowStockThreshold: true,
+      _count: { select: { units: { where: { status: "IN_STOCK" } } } },
+    },
+  });
+
+  return products
+    .filter((p) => p._count.units <= p.lowStockThreshold)
+    .map((p) => ({ id: p.id, name: p.name, brand: p.brand, inStock: p._count.units, lowStockThreshold: p.lowStockThreshold }))
+    .sort((a, b) => a.inStock - b.inStock);
 }

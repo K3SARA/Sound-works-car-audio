@@ -36,6 +36,7 @@ export default async function EditProductPage({
             sku: product.sku,
             sellingPrice: product.sellingPrice ? Number(product.sellingPrice) : null,
             warrantyMonths: product.warrantyMonths,
+            lowStockThreshold: product.lowStockThreshold,
             supplierId: product.supplierId,
             supplierName: product.supplier?.name ?? "",
           }}

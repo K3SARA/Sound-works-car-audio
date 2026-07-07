@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { createProduct, type ActionResult } from "@/lib/actions/inventory";
 import { SupplierCombobox } from "@/components/inventory/SupplierCombobox";
+import { ProductNameInput } from "@/components/inventory/ProductNameInput";
 
 const initialState: ActionResult = {};
 
@@ -22,12 +23,13 @@ export function AddProductForm() {
 
   return (
     <form key={formKey} action={formAction} className="space-y-2">
-      <input name="name" placeholder="Name (e.g. TS-A1670F)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
+      <ProductNameInput />
       <input name="brand" placeholder="Brand (e.g. Pioneer)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
       <input name="category" placeholder="Category (e.g. Speakers)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
       <input name="sku" placeholder="Model Number" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
       <input name="sellingPrice" type="number" step="0.01" min="0" placeholder="Selling price (Rs.)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
       <input name="warrantyMonths" type="number" min="0" placeholder="Warranty (months)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
+      <input name="lowStockThreshold" type="number" min="0" defaultValue={3} placeholder="Low stock alert at (units)" required className="w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black" />
 
       <SupplierCombobox />
 
