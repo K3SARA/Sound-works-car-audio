@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, FileBarChart, ShieldCheck, Truck } from "lucide-react";
+import { LayoutDashboard, Package, FileBarChart, ShieldCheck, Truck, ShoppingCart } from "lucide-react";
 import { clsx } from "clsx";
 import { BUSINESS } from "@/lib/business";
 import { Logo } from "@/components/layout/Logo";
 
 const LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/pos", label: "Billing", icon: ShoppingCart },
   { href: "/inventory", label: "Inventory", icon: Package },
   { href: "/suppliers", label: "Suppliers", icon: Truck },
   { href: "/reports", label: "Reports", icon: FileBarChart },

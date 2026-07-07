@@ -1,11 +1,23 @@
+import { headers } from "next/headers";
 import { auth, signOut } from "@/lib/auth";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { Footer } from "@/components/layout/Footer";
 import { Logo } from "@/components/layout/Logo";
 import { BUSINESS } from "@/lib/business";
+import { DesktopShell } from "@/components/layout/DesktopShell";
+import { detectDevice } from "@/lib/device";
 
 export default async function MobileLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
+
+  // Admins browsing Billing/Stock Check from a desktop browser get the same
+  // sidebar shell as the rest of the admin dashboard instead of the phone-style nav.
+  if (session?.user?.role === "ADMIN") {
+    const userAgent = (await headers()).get("user-agent");
+    if (detectDevice(userAgent) === "desktop") {
+      return <DesktopShell>{children}</DesktopShell>;
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
