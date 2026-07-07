@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@/generated/prisma/client";
 import { formatInvoiceNumber } from "@/lib/invoice-number";
@@ -147,6 +148,7 @@ const recordPaymentSchema = z.object({
 
 /** Logs an additional payment toward settling a credit / partially-paid invoice. */
 export async function recordPayment(_prevState: { error?: string; success?: string }, formData: FormData) {
+  await requireAdmin();
   const parsed = recordPaymentSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
@@ -179,6 +181,7 @@ export async function recordPayment(_prevState: { error?: string; success?: stri
  * broken/scrapped unit look sellable again.
  */
 export async function deleteInvoice(invoiceId: string) {
+  await requireAdmin();
   await prisma.$transaction(async (tx) => {
     const invoice = await tx.invoice.findUnique({
       where: { id: invoiceId },

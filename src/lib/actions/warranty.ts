@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/authz";
 import { formatInvoiceNumber } from "@/lib/invoice-number";
 
 export type WarrantyLookupResult = {
@@ -90,8 +90,8 @@ const logClaimSchema = z.object({
 
 /** Logs the item for repair/replacement and flips the unit to IN_REPAIR so it drops out of sellable stock. */
 export async function logWarrantyClaim(input: z.infer<typeof logClaimSchema>) {
+  const session = await requireAdmin();
   const data = logClaimSchema.parse(input);
-  const session = await auth();
 
   await prisma.$transaction([
     prisma.warrantyClaim.create({
@@ -117,6 +117,7 @@ const updateClaimSchema = z.object({
 });
 
 export async function updateWarrantyClaim(input: z.infer<typeof updateClaimSchema>) {
+  await requireAdmin();
   const data = updateClaimSchema.parse(input);
 
   await prisma.warrantyClaim.update({

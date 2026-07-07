@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
+import { requireAdmin } from "@/lib/authz";
 
 export type SupplierOption = { id: string; name: string };
 
@@ -26,12 +27,14 @@ const supplierSchema = z.object({
 });
 
 export async function createSupplier(formData: FormData) {
+  await requireAdmin();
   const data = supplierSchema.parse(Object.fromEntries(formData));
   await prisma.supplier.create({ data });
   revalidatePath("/suppliers");
 }
 
 export async function updateSupplier(supplierId: string, formData: FormData) {
+  await requireAdmin();
   const data = supplierSchema.parse(Object.fromEntries(formData));
   await prisma.supplier.update({ where: { id: supplierId }, data });
   revalidatePath("/suppliers");
@@ -39,6 +42,7 @@ export async function updateSupplier(supplierId: string, formData: FormData) {
 }
 
 export async function deleteSupplier(supplierId: string) {
+  await requireAdmin();
   try {
     await prisma.supplier.delete({ where: { id: supplierId } });
   } catch (err) {
