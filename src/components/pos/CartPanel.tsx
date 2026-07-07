@@ -3,11 +3,34 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
-import { Search, Trash2, Loader2, CheckCircle2, Printer } from "lucide-react";
+import { Search, Trash2, Loader2, CheckCircle2, Printer, MessageCircle } from "lucide-react";
 import { searchAvailableUnits, checkoutInvoice, type AvailableUnit } from "@/lib/actions/pos";
 import { CategoryFilter } from "@/components/pos/CategoryFilter";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
+import { BUSINESS } from "@/lib/business";
 
 type CartLine = AvailableUnit & { salePrice: string };
+
+function buildInvoiceMessage(args: {
+  invoiceNumber: string;
+  items: CartLine[];
+  total: number;
+  balanceDue: number;
+}): string {
+  const lines = [
+    `*${BUSINESS.name}*`,
+    `Invoice: ${args.invoiceNumber}`,
+    "",
+    ...args.items.map((i) => `• ${i.brand} ${i.productName} — Rs. ${(Number(i.salePrice) || 0).toFixed(2)}`),
+    "",
+    `Total: Rs. ${args.total.toFixed(2)}`,
+  ];
+  if (args.balanceDue > 0.005) {
+    lines.push(`Balance due: Rs. ${args.balanceDue.toFixed(2)}`);
+  }
+  lines.push("", "Thank you for shopping with us!");
+  return lines.join("\n");
+}
 
 export function CartPanel() {
   const [query, setQuery] = useState("");
@@ -22,6 +45,9 @@ export function CartPanel() {
   const [invoiceNumber, setInvoiceNumber] = useState<string | null>(null);
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
   const [balanceDue, setBalanceDue] = useState(0);
+  const [completedPhone, setCompletedPhone] = useState("");
+  const [completedItems, setCompletedItems] = useState<CartLine[]>([]);
+  const [completedTotal, setCompletedTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isSearching, startSearch] = useTransition();
   const [isCheckingOut, startCheckout] = useTransition();
@@ -97,6 +123,9 @@ export function CartPanel() {
         setInvoiceNumber(result.invoiceNumber);
         setInvoiceId(result.invoiceId);
         setBalanceDue(result.balanceDue);
+        setCompletedPhone(customerPhone.trim());
+        setCompletedItems(cart);
+        setCompletedTotal(total);
         setCart([]);
         setCustomerName("");
         setCustomerPhone("");
@@ -110,6 +139,11 @@ export function CartPanel() {
   }
 
   if (invoiceNumber && invoiceId) {
+    const whatsAppLink = buildWhatsAppLink(
+      completedPhone,
+      buildInvoiceMessage({ invoiceNumber, items: completedItems, total: completedTotal, balanceDue })
+    );
+
     return (
       <div className="rounded-lg border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-black">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40">
@@ -130,6 +164,18 @@ export function CartPanel() {
           <Printer size={16} />
           Preview & print invoice
         </Link>
+
+        {whatsAppLink && (
+          <a
+            href={whatsAppLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 flex items-center justify-center gap-2 rounded-md bg-[#25D366] py-2.5 text-sm font-semibold text-white"
+          >
+            <MessageCircle size={16} />
+            Send bill via WhatsApp
+          </a>
+        )}
 
         <button
           onClick={() => {
