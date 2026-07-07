@@ -11,3 +11,12 @@ export async function getCategories(): Promise<string[]> {
   });
   return rows.map((r) => r.category);
 }
+
+/** Existing product names, for the "add product" name field's autocomplete suggestions. */
+export async function getProductNames(): Promise<string[]> {
+  const rows = await prisma.product.findMany({
+    select: { name: true },
+    orderBy: { name: "asc" },
+  });
+  return rows.map((r) => r.name);
+}
