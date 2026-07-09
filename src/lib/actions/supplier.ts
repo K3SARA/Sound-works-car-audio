@@ -46,7 +46,12 @@ export async function deleteSupplier(supplierId: string) {
   try {
     await prisma.supplier.delete({ where: { id: supplierId } });
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {
+    const errStr = String(err);
+    if (
+      (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") ||
+      errStr.includes("violates foreign key constraint") ||
+      errStr.includes("violates RESTRICT setting")
+    ) {
       redirect(`/suppliers?error=${encodeURIComponent("Can't delete a supplier that still has products linked to it.")}`);
     }
     throw err;

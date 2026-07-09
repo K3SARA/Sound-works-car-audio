@@ -132,7 +132,12 @@ export async function deleteProduct(productId: string) {
   try {
     await prisma.product.delete({ where: { id: productId } });
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {
+    const errStr = String(err);
+    if (
+      (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") ||
+      errStr.includes("violates foreign key constraint") ||
+      errStr.includes("violates RESTRICT setting")
+    ) {
       redirect(`/inventory?error=${encodeURIComponent("Can't delete a product that still has inventory units. Remove its units first.")}`);
     }
     throw err;

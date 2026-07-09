@@ -1,13 +1,28 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import { deleteProduct } from "@/lib/actions/inventory";
 import { getCategories } from "@/lib/actions/catalog";
 import { AddProductModal } from "@/components/inventory/AddProductModal";
+import { InventorySearch } from "@/components/inventory/InventorySearch";
 import { clsx } from "clsx";
 
-async function getProducts(category?: string) {
+async function getProducts(category?: string, search?: string) {
+  const AND: Prisma.ProductWhereInput[] = [];
+  if (category) AND.push({ category });
+  if (search) {
+    AND.push({
+      OR: [
+        { name: { contains: search, mode: "insensitive" } },
+        { brand: { contains: search, mode: "insensitive" } },
+        { sku: { contains: search, mode: "insensitive" } },
+        { supplier: { name: { contains: search, mode: "insensitive" } } },
+      ],
+    });
+  }
+
   return prisma.product.findMany({
-    where: category ? { category } : undefined,
+    where: AND.length > 0 ? { AND } : undefined,
     include: {
       _count: { select: { units: { where: { status: "IN_STOCK" } } } },
       supplier: { select: { name: true } },
@@ -19,15 +34,16 @@ async function getProducts(category?: string) {
 export default async function InventoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; error?: string }>;
+  searchParams: Promise<{ category?: string; search?: string; error?: string }>;
 }) {
-  const { category, error } = await searchParams;
-  const [products, categories] = await Promise.all([getProducts(category), getCategories()]);
+  const { category, search, error } = await searchParams;
+  const [products, categories] = await Promise.all([getProducts(category, search), getCategories()]);
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold">Inventory</h1>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h1 className="text-xl font-bold shrink-0">Inventory</h1>
+        <InventorySearch />
         <AddProductModal />
       </div>
 
@@ -114,7 +130,11 @@ export default async function InventoryPage({
           {products.length === 0 && (
             <tr>
               <td colSpan={9} className="px-4 py-6 text-center text-black/40">
-                {category ? `No products in "${category}".` : "No products yet."}
+                {search
+                  ? `No products matching "${search}"${category ? ` in "${category}"` : ""}.`
+                  : category
+                    ? `No products in "${category}".`
+                    : "No products yet."}
               </td>
             </tr>
           )}

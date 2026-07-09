@@ -10,6 +10,7 @@ import { formatInvoiceNumber } from "@/lib/invoice-number";
 
 export type AvailableUnit = {
   unitId: string;
+  productId?: string;
   serialNumber: string;
   productName: string;
   brand: string;
@@ -17,12 +18,14 @@ export type AvailableUnit = {
   location: string | null;
   warrantyMonths: number;
   sellingPrice: number | null;
+  inStockCount?: number;
 };
 
 /**
  * Matches by exact serial number (scanner input) or partial product name/model number/brand,
  * optionally narrowed to one category. With no search text and no category ("All"), browses
  * the first 20 in-stock units — capped by `take`, not an unbounded dump of the whole catalog.
+ * Groups items without warranty by product and hides their serial numbers.
  */
 export async function searchAvailableUnits(query: string, category?: string): Promise<AvailableUnit[]> {
   const q = query.trim();
@@ -40,23 +43,55 @@ export async function searchAvailableUnits(query: string, category?: string): Pr
     });
   }
 
+  // Fetch all matching units to perform the grouping
   const units = await prisma.inventoryUnit.findMany({
     where: { AND },
     include: { product: true },
     orderBy: { product: { name: "asc" } },
-    take: 20,
   });
 
-  return units.map((u) => ({
-    unitId: u.id,
-    serialNumber: u.serialNumber,
-    productName: u.product.name,
-    brand: u.product.brand,
-    sku: u.product.sku,
-    location: u.location,
-    warrantyMonths: u.product.warrantyMonths,
-    sellingPrice: u.product.sellingPrice ? Number(u.product.sellingPrice) : null,
-  }));
+  const result: AvailableUnit[] = [];
+  const nonWarrantyGroups: Record<string, typeof units> = {};
+
+  for (const u of units) {
+    if (u.product.warrantyMonths > 0) {
+      result.push({
+        unitId: u.id,
+        productId: u.productId,
+        serialNumber: u.serialNumber,
+        productName: u.product.name,
+        brand: u.product.brand,
+        sku: u.product.sku,
+        location: u.location,
+        warrantyMonths: u.product.warrantyMonths,
+        sellingPrice: u.product.sellingPrice ? Number(u.product.sellingPrice) : null,
+        inStockCount: 1,
+      });
+    } else {
+      if (!nonWarrantyGroups[u.productId]) {
+        nonWarrantyGroups[u.productId] = [];
+      }
+      nonWarrantyGroups[u.productId].push(u);
+    }
+  }
+
+  for (const [productId, group] of Object.entries(nonWarrantyGroups)) {
+    const firstUnit = group[0];
+    result.push({
+      unitId: productId, // use productId as the unitId in the cart
+      productId: productId,
+      serialNumber: "—", // No serial number
+      productName: firstUnit.product.name,
+      brand: firstUnit.product.brand,
+      sku: firstUnit.product.sku,
+      location: firstUnit.location,
+      warrantyMonths: 0,
+      sellingPrice: firstUnit.product.sellingPrice ? Number(firstUnit.product.sellingPrice) : null,
+      inStockCount: group.length,
+    });
+  }
+
+  return result.slice(0, 20);
 }
 
 const checkoutSchema = z.object({
@@ -67,7 +102,9 @@ const checkoutSchema = z.object({
   items: z
     .array(
       z.object({
-        unitId: z.string(),
+        unitId: z.string().optional(),
+        productId: z.string().optional(),
+        quantity: z.number().int().min(1).optional(),
         salePrice: z.coerce.number().positive(),
         warrantyMonths: z.coerce.number().int().min(0),
       })
@@ -78,10 +115,10 @@ const checkoutSchema = z.object({
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
 
 /**
- * Sells the scanned serial numbers: creates the invoice, freezes warranty terms, and flips
- * units to SOLD. Customer name/phone are required whenever any item carries a warranty, or
- * whenever the sale isn't paid in full (a credit sale) — either way, you need to know who
- * to follow up with.
+ * Sells the items: creates the invoice, freezes warranty terms, and flips units to SOLD.
+ * Customer name/phone are required whenever any item carries a warranty, or whenever
+ * the sale isn't paid in full (a credit sale). Resolves non-warranty product quantities to
+ * in-stock units on the fly.
  */
 export async function checkoutInvoice(input: CheckoutInput) {
   const data = checkoutSchema.parse(input);
@@ -91,7 +128,7 @@ export async function checkoutInvoice(input: CheckoutInput) {
   const customerPhone = data.customerPhone?.trim() ?? "";
   const hasWarrantyItem = data.items.some((item) => item.warrantyMonths > 0);
 
-  const totalAmount = data.items.reduce((sum, i) => sum + i.salePrice, 0);
+  const totalAmount = data.items.reduce((sum, item) => sum + item.salePrice * (item.quantity ?? 1), 0);
   const amountPaid = data.amountPaid === undefined ? totalAmount : Math.min(data.amountPaid, totalAmount);
   const isCredit = amountPaid < totalAmount;
 
@@ -104,6 +141,49 @@ export async function checkoutInvoice(input: CheckoutInput) {
   }
 
   const invoice = await prisma.$transaction(async (tx) => {
+    const itemsToCreate = [];
+    const unitsToSellIds: string[] = [];
+
+    for (const item of data.items) {
+      if (item.warrantyMonths > 0) {
+        if (!item.unitId) throw new Error("Unit ID is required for items with warranty.");
+        unitsToSellIds.push(item.unitId);
+        itemsToCreate.push({
+          salePrice: item.salePrice,
+          warrantyMonths: item.warrantyMonths,
+          inventoryUnitId: item.unitId,
+        });
+      } else {
+        if (!item.productId || !item.quantity) {
+          throw new Error("Product ID and quantity are required for items without warranty.");
+        }
+        const availableUnits = await tx.inventoryUnit.findMany({
+          where: { productId: item.productId, status: "IN_STOCK" },
+          take: item.quantity,
+          select: { id: true },
+        });
+
+        if (availableUnits.length < item.quantity) {
+          const product = await tx.product.findUnique({
+            where: { id: item.productId },
+            select: { name: true },
+          });
+          throw new Error(
+            `Insufficient stock for "${product?.name || "product"}". Requested ${item.quantity}, but only ${availableUnits.length} available.`
+          );
+        }
+
+        for (const u of availableUnits) {
+          unitsToSellIds.push(u.id);
+          itemsToCreate.push({
+            salePrice: item.salePrice,
+            warrantyMonths: 0,
+            inventoryUnitId: u.id,
+          });
+        }
+      }
+    }
+
     const created = await tx.invoice.create({
       data: {
         customerName: customerName || "Walk-in Customer",
@@ -113,18 +193,14 @@ export async function checkoutInvoice(input: CheckoutInput) {
         amountPaid,
         createdById: session?.user?.id,
         items: {
-          create: data.items.map((item) => ({
-            salePrice: item.salePrice,
-            warrantyMonths: item.warrantyMonths,
-            inventoryUnit: { connect: { id: item.unitId } },
-          })),
+          create: itemsToCreate,
         },
       },
       include: { items: true },
     });
 
     await tx.inventoryUnit.updateMany({
-      where: { id: { in: data.items.map((i) => i.unitId) } },
+      where: { id: { in: unitsToSellIds } },
       data: { status: "SOLD" },
     });
 

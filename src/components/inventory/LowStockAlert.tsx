@@ -24,6 +24,7 @@ export function LowStockAlert({ items }: { items: LowStockProduct[] }) {
   const currentKey = items.map((p) => p.id).sort().join(",");
   const persistedDismissedKey = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [locallyDismissedKey, setLocallyDismissedKey] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
   const dismissedKey = locallyDismissedKey ?? persistedDismissedKey;
 
   if (items.length === 0 || currentKey === dismissedKey) return null;
@@ -42,22 +43,32 @@ export function LowStockAlert({ items }: { items: LowStockProduct[] }) {
       >
         <X size={16} />
       </button>
-      <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
-        <AlertTriangle size={16} />
-        <p className="text-sm font-semibold">
-          {items.length} item{items.length === 1 ? "" : "s"} running low on stock
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-amber-800 dark:text-amber-400">
+        <div className="flex items-center gap-2">
+          <AlertTriangle size={16} />
+          <p className="text-sm font-semibold">
+            {items.length} item{items.length === 1 ? "" : "s"} running low on stock
+          </p>
+        </div>
+        <button
+          onClick={() => setIsExpanded((prev) => !prev)}
+          className="text-xs font-medium underline hover:text-amber-900 dark:hover:text-amber-200"
+        >
+          {isExpanded ? "Hide details" : "Show details"}
+        </button>
       </div>
-      <ul className="mt-2 space-y-1 text-xs text-amber-800 dark:text-amber-400">
-        {items.map((p) => (
-          <li key={p.id} className="flex items-center justify-between gap-3">
-            <span>
-              {p.brand} {p.name}
-            </span>
-            <span className="shrink-0 font-medium">{p.inStock === 0 ? "Out of stock" : `${p.inStock} left`}</span>
-          </li>
-        ))}
-      </ul>
+      {isExpanded && (
+        <ul className="mt-3 max-h-40 overflow-y-auto border-t border-amber-200/50 pt-2 space-y-1 text-xs text-amber-800 dark:border-amber-800/30 dark:text-amber-400">
+          {items.map((p) => (
+            <li key={p.id} className="flex items-center justify-between gap-3">
+              <span>
+                {p.brand} {p.name}
+              </span>
+              <span className="shrink-0 font-medium">{p.inStock === 0 ? "Out of stock" : `${p.inStock} left`}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
