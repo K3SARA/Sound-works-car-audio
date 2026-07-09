@@ -386,62 +386,65 @@ export function CartPanel() {
   );
 
   return (
-    <div className="space-y-4">
-      {/* Search Input */}
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-black/40" size={18} />
-        <input
-          value={query}
-          onChange={(e) => handleQueryChange(e.target.value)}
-          placeholder="Scan serial number or search product..."
-          autoFocus
-          className="w-full rounded-md border border-black/15 bg-white py-2.5 pl-10 pr-3 text-sm dark:border-white/15 dark:bg-black"
-        />
-        {isSearching && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-black/40" size={16} />
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+      {/* Left side: Product search & results */}
+      <div className="space-y-4 md:col-span-7 lg:col-span-8">
+        {/* Search Input */}
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-black/40" size={18} />
+          <input
+            value={query}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            placeholder="Scan serial number or search product..."
+            autoFocus
+            className="w-full rounded-md border border-black/15 bg-white py-2.5 pl-10 pr-3 text-sm dark:border-white/15 dark:bg-black"
+          />
+          {isSearching && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-black/40" size={16} />
+          )}
+        </div>
+
+        {/* Category Filter */}
+        <CategoryFilter selected={category} onChange={handleCategoryChange} />
+
+        {/* Search Results */}
+        {results.length > 0 && (
+          <ul className="divide-y divide-black/10 rounded-md border border-black/10 dark:divide-white/10 dark:border-white/10">
+            {results.map((r) => {
+              const isInCart = cart.some((c) => c.unitId === r.unitId);
+              return (
+                <li key={r.unitId} className="flex items-center justify-between p-3">
+                  <div className="min-w-0 flex-1 pr-3">
+                    <p className="text-sm font-medium truncate">{r.brand} {r.productName}</p>
+                    <p className="text-xs text-black/50 dark:text-white/50 truncate">
+                      SN: {r.serialNumber} {r.location ? `· ${r.location}` : ""}
+                      {r.sellingPrice ? ` · Rs. ${r.sellingPrice.toFixed(2)}` : ""}
+                    </p>
+                  </div>
+                  {isInCart ? (
+                    <button
+                      onClick={() => removeFromCart(r.unitId)}
+                      className="shrink-0 rounded-md bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-600 dark:bg-red-950/40 dark:text-red-400"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => addToCart(r)}
+                      className="shrink-0 rounded-md bg-black px-3 py-1.5 text-xs font-semibold text-white dark:bg-white dark:text-black"
+                    >
+                      Add
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
 
-      {/* Category Filter */}
-      <CategoryFilter selected={category} onChange={handleCategoryChange} />
-
-      {/* Search Results */}
-      {results.length > 0 && (
-        <ul className="divide-y divide-black/10 rounded-md border border-black/10 dark:divide-white/10 dark:border-white/10">
-          {results.map((r) => {
-            const isInCart = cart.some((c) => c.unitId === r.unitId);
-            return (
-              <li key={r.unitId} className="flex items-center justify-between p-3">
-                <div className="min-w-0 flex-1 pr-3">
-                  <p className="text-sm font-medium truncate">{r.brand} {r.productName}</p>
-                  <p className="text-xs text-black/50 dark:text-white/50 truncate">
-                    SN: {r.serialNumber} {r.location ? `· ${r.location}` : ""}
-                    {r.sellingPrice ? ` · Rs. ${r.sellingPrice.toFixed(2)}` : ""}
-                  </p>
-                </div>
-                {isInCart ? (
-                  <button
-                    onClick={() => removeFromCart(r.unitId)}
-                    className="shrink-0 rounded-md bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-600 dark:bg-red-950/40 dark:text-red-400"
-                  >
-                    Remove
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => addToCart(r)}
-                    className="shrink-0 rounded-md bg-black px-3 py-1.5 text-xs font-semibold text-white dark:bg-white dark:text-black"
-                  >
-                    Add
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
-      {/* Desktop Cart View (Hidden on mobile) */}
-      <div className="hidden md:block space-y-4">
+      {/* Right side: Cart & Checkout (Desktop only) */}
+      <div className="hidden md:block md:col-span-5 lg:col-span-4 space-y-4 sticky top-6">
         {cartItemsList}
         {checkoutForm}
       </div>
